@@ -1,11 +1,11 @@
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex font-pixel min-h-screen items-center justify-center bg-zinc-50  dark:bg-black">
       <main className="flex min-h-screen w-full max-w-4xl flex-col items-center justify-center px-6 py-20 text-center">
         {/* Logo/Brand */}
         <div className="mb-8">
           <h1 className="text-5xl font-bold tracking-tight text-black dark:text-zinc-50">
-            Open TA Tel-Yu
+            Open TA Telyu
           </h1>
         </div>
 
@@ -82,7 +82,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="mt-20 text-sm text-zinc-500 dark:text-zinc-500">
-          <p>For Telkom University Alumni Community</p>
+          <p>For Telyutizen. By Telyutizen.</p>
         </footer>
       </main>
     </div>

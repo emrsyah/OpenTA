@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Open TA Tel-U
+
+A centralized platform for discovering, accessing, and discussing research papers from Telkom University alumni.
+
+## Inspiration
+
+Similar to [alphaXiv](https://www.alphaxiv.org/) and [SciSpace](https://scispace.com/), Open TA Tel-U aims to create a collaborative space for academic research specifically for the Telkom University community.
+
+## Features (Planned)
+
+- **AI Chat & Research**: Ask our AI anything, search your references or ask your alumns paper
+- **Paper Repository**: Centralized access to alumni research papers, theses, and dissertations
+- **Search & Discovery**: Advanced search to find papers by author, topic, department, or year
+- **Discussion**: Comment and Q&A sections for each paper to foster academic discourse
+- **Citations & References**: Track citations and link related works
+
+## Technology Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Styling**: Tailwind CSS
+- **Language**: TypeScript
 
 ## Getting Started
 
-First, run the development server:
+This is currently in early development. The platform is being built to serve the Telkom University academic community.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Vision
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+To create an open, accessible platform that celebrates and amplifies the research contributions of Telkom University alumni, making knowledge sharing seamless and collaborative.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Status: 🚧 Under Development*
