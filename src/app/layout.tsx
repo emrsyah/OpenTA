@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { GeistPixelSquare } from "geist/font/pixel";
 import "./globals.css";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s | Open TA Telyu",
   },
   description:
-    "A Platform for Telkom University Alumni Research Papers. Discover, access, and discuss research papers from Telkom University alumni.",
+    "The intelligent open directory for Telkom University research. Search, ask, and discover insights from alumni papers using advanced AI.",
   keywords: [
     "Telkom University",
     "Open TA",
@@ -32,6 +35,7 @@ export const metadata: Metadata = {
     "Tugas Akhir",
     "Academic",
     "Repository",
+    "AI Research Assistant",
   ],
   authors: [{ name: "Telyutizen" }],
   creator: "Telyutizen",
@@ -50,7 +54,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Open TA Telyu",
     description:
-      "A Platform for Telkom University Alumni Research Papers. Discover, access, and discuss research papers from Telkom University alumni.",
+      "The intelligent open directory for Telkom University research. Search, ask, and discover insights from alumni papers using advanced AI.",
     url: "https://open-ta-telyu.vercel.app",
     siteName: "Open TA Telyu",
     locale: "en_US",
@@ -60,7 +64,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Open TA Telyu",
     description:
-      "A Platform for Telkom University Alumni Research Papers. Discover, access, and discuss research papers from Telkom University alumni.",
+      "The intelligent open directory for Telkom University research. Search, ask, and discover insights from alumni papers using advanced AI.",
     creator: "@telyutizen",
   },
   icons: {
@@ -76,11 +80,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${GeistPixelSquare.variable} antialiased font-mono`}
       >
-        {children}
+        <TooltipProvider>
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>{children}</SidebarInset>
+          </SidebarProvider>
+        </TooltipProvider>
       </body>
     </html>
   );

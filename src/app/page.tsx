@@ -1,90 +1,187 @@
-export default function Home() {
+"use client";
+
+import {
+  Attachment,
+  AttachmentPreview,
+  AttachmentRemove,
+  Attachments,
+} from "@/components/ai-elements/attachments";
+import {
+  PromptInput,
+  PromptInputActionAddAttachments,
+  PromptInputActionMenu,
+  PromptInputActionMenuContent,
+  PromptInputActionMenuTrigger,
+  PromptInputBody,
+  PromptInputButton,
+  PromptInputHeader,
+  type PromptInputMessage,
+  PromptInputSelect,
+  PromptInputSelectContent,
+  PromptInputSelectItem,
+  PromptInputSelectTrigger,
+  PromptInputSelectValue,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputFooter,
+  PromptInputTools,
+  usePromptInputAttachments,
+} from "@/components/ai-elements/prompt-input";
+import { GlobeIcon } from "lucide-react";
+import { useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import {
+  Message,
+  MessageContent,
+  MessageResponse,
+} from "@/components/ai-elements/message";
+
+const PromptInputAttachmentsDisplay = () => {
+  const attachments = usePromptInputAttachments();
+
+  if (attachments.files.length === 0) {
+    return null;
+  }
+
   return (
-    <div className="flex font-pixel min-h-screen items-center justify-center bg-zinc-50  dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-4xl flex-col items-center justify-center px-6 py-20 text-center">
-        {/* Logo/Brand */}
-        <div className="mb-8">
-          <h1 className="text-5xl font-bold tracking-tight text-black dark:text-zinc-50">
-            Open TA Telyu
-          </h1>
-        </div>
+    <Attachments variant="inline">
+      {attachments.files.map((attachment) => (
+        <Attachment
+          data={attachment}
+          key={attachment.id}
+          onRemove={() => attachments.remove(attachment.id)}
+        >
+          <AttachmentPreview />
+          <AttachmentRemove />
+        </Attachment>
+      ))}
+    </Attachments>
+  );
+};
 
-        {/* Tagline */}
-        <p className="mb-4 max-w-2xl text-xl text-zinc-600 dark:text-zinc-400">
-          A Platform for Telkom University Alumni Research Papers
-        </p>
+const models = [
+  { id: "gpt-4o", name: "GPT-4o" },
+  { id: "claude-opus-4-20250514", name: "Claude 4 Opus" },
+];
 
-        {/* Description */}
-        <p className="mb-12 max-w-xl text-base text-zinc-500 dark:text-zinc-500">
-          Discover, access, and discuss research papers from Telkom University
-          alumni. Inspired by{" "}
-          <a
-            href="https://www.alphaxiv.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 underline dark:text-blue-400"
-          >
-            alphaXiv
-          </a>{" "}
-          and{" "}
-          <a
-            href="https://scispace.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 underline dark:text-blue-400"
-          >
-            SciSpace
-          </a>
-          , built for our academic community.
-        </p>
+export default function Home() {
+  const [text, setText] = useState<string>("");
+  const [model, setModel] = useState<string>(models[0].id);
+  const [useWebSearch, setUseWebSearch] = useState<boolean>(false);
 
-        {/* Status Badge */}
-        <div className="mb-16 inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
-          </span>
-          Coming Soon
-        </div>
+  // useChat will default to call /api/chat
+  const { messages, status, sendMessage } = useChat();
 
-        {/* What You'll Be Able To Do */}
-        <div className="grid w-full max-w-3xl gap-6 sm:grid-cols-3">
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="mb-3 text-2xl">📚</div>
-            <h3 className="mb-2 font-semibold text-black dark:text-zinc-50">
-              Browse Papers
-            </h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Access a centralized repository of alumni research papers
-            </p>
-          </div>
+  const handleSubmit = (message: PromptInputMessage) => {
+    const hasText = Boolean(message.text);
+    const hasAttachments = Boolean(message.files?.length);
 
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="mb-3 text-2xl">🔍</div>
-            <h3 className="mb-2 font-semibold text-black dark:text-zinc-50">
-              Search & Discover
-            </h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Find papers by topic, author, department, or year
-            </p>
-          </div>
+    if (!(hasText || hasAttachments)) {
+      return;
+    }
 
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="mb-3 text-2xl">💬</div>
-            <h3 className="mb-2 font-semibold text-black dark:text-zinc-50">
-              Discuss
-            </h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Engage with authors and peers through Q&A and comments
-            </p>
-          </div>
-        </div>
+    sendMessage(
+      {
+        text: message.text || "Sent with attachments",
+        files: message.files,
+      },
+      {
+        body: {
+          model: model,
+          webSearch: useWebSearch,
+        },
+      }
+    );
+    setText("");
+  };
 
-        {/* Footer */}
-        <footer className="mt-20 text-sm text-zinc-500 dark:text-zinc-500">
-          <p>For Telyutizen. By Telyutizen.</p>
-        </footer>
-      </main>
+  return (
+    <div className="flex flex-col h-[calc(100vh-2rem)] p-4">
+      <Conversation className="flex-1 overflow-hidden max-w-4xl mx-auto w-full">
+        <ConversationContent className="h-full">
+          {messages.map((message) => (
+            <Message from={message.role} key={message.id}>
+              <MessageContent>
+                {message.parts.map((part, i) => {
+                  switch (part.type) {
+                    case "text":
+                      return (
+                        <MessageResponse key={`${message.id}-${i}`}>
+                          {part.text}
+                        </MessageResponse>
+                      );
+                    default:
+                      return null;
+                  }
+                })}
+              </MessageContent>
+            </Message>
+          ))}
+        </ConversationContent>
+        <ConversationScrollButton />
+      </Conversation>
+
+      <div className="mt-4 max-w-4xl mx-auto w-full">
+        <PromptInput
+          onSubmit={handleSubmit}
+          className="w-full"
+          globalDrop
+          multiple
+        >
+          <PromptInputHeader>
+            <PromptInputAttachmentsDisplay />
+          </PromptInputHeader>
+          <PromptInputBody>
+            <PromptInputTextarea
+              onChange={(e) => setText(e.target.value)}
+              value={text}
+              placeholder="Type your message..."
+            />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputTools>
+              <PromptInputActionMenu>
+                <PromptInputActionMenuTrigger />
+                <PromptInputActionMenuContent>
+                  <PromptInputActionAddAttachments />
+                </PromptInputActionMenuContent>
+              </PromptInputActionMenu>
+              <PromptInputButton
+                onClick={() => setUseWebSearch(!useWebSearch)}
+                tooltip={{ content: "Search the web", shortcut: "⌘K" }}
+                variant={useWebSearch ? "default" : "ghost"}
+                type="button"
+              >
+                <GlobeIcon size={16} />
+                <span>Search</span>
+              </PromptInputButton>
+              <PromptInputSelect
+                onValueChange={(value) => {
+                  setModel(value);
+                }}
+                value={model}
+              >
+                <PromptInputSelectTrigger>
+                  <PromptInputSelectValue />
+                </PromptInputSelectTrigger>
+                <PromptInputSelectContent>
+                  {models.map((model) => (
+                    <PromptInputSelectItem key={model.id} value={model.id}>
+                      {model.name}
+                    </PromptInputSelectItem>
+                  ))}
+                </PromptInputSelectContent>
+              </PromptInputSelect>
+            </PromptInputTools>
+            <PromptInputSubmit disabled={!text && status !== 'streaming'} status={status === 'streaming' ? 'streaming' : 'submitted'} />
+          </PromptInputFooter>
+        </PromptInput>
+      </div>
     </div>
   );
 }
