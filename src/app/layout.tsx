@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://open-ta-telyu.vercel.app"
+    process.env.NEXT_PUBLIC_APP_URL || "https://open-ta-telyu.vercel.app",
   ),
   title: {
     default: "Open TA Telyu",

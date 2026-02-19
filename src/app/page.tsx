@@ -29,7 +29,8 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { GlobeIcon } from "lucide-react";
 import { useState } from "react";
-import { useChat } from "@ai-sdk/react";
+import { useRouter } from "next/navigation";
+import { nanoid } from "nanoid";
 import {
   Conversation,
   ConversationContent,
@@ -70,12 +71,10 @@ const models = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const [text, setText] = useState<string>("");
   const [model, setModel] = useState<string>(models[0].id);
   const [useWebSearch, setUseWebSearch] = useState<boolean>(false);
-
-  // useChat will default to call /api/chat
-  const { messages, status, sendMessage } = useChat();
 
   const handleSubmit = (message: PromptInputMessage) => {
     const hasText = Boolean(message.text);
@@ -85,48 +84,22 @@ export default function Home() {
       return;
     }
 
-    sendMessage(
-      {
-        text: message.text || "Sent with attachments",
-        files: message.files,
-      },
-      {
-        body: {
-          model: model,
-          webSearch: useWebSearch,
-        },
-      }
-    );
-    setText("");
+    const conversationId = nanoid();
+    const params = new URLSearchParams();
+    if (message.text) params.set("q", message.text);
+    router.push(`/${conversationId}?${params.toString()}`);
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] p-4">
-      <Conversation className="flex-1 overflow-hidden max-w-4xl mx-auto w-full">
-        <ConversationContent className="h-full">
-          {messages.map((message) => (
-            <Message from={message.role} key={message.id}>
-              <MessageContent>
-                {message.parts.map((part, i) => {
-                  switch (part.type) {
-                    case "text":
-                      return (
-                        <MessageResponse key={`${message.id}-${i}`}>
-                          {part.text}
-                        </MessageResponse>
-                      );
-                    default:
-                      return null;
-                  }
-                })}
-              </MessageContent>
-            </Message>
-          ))}
+    <div className="flex flex-col h-[calc(100vh-2rem)]">
+      <Conversation className="flex-1 overflow-hidden">
+        <ConversationContent>
+          <div />
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
 
-      <div className="mt-4 max-w-4xl mx-auto w-full">
+      <div className="px-4 py-3 max-w-4xl mx-auto w-full">
         <PromptInput
           onSubmit={handleSubmit}
           className="w-full"
@@ -158,9 +131,9 @@ export default function Home() {
                 type="button"
               >
                 <GlobeIcon size={16} />
-                <span>Search</span>
+                <span>Deep Research</span>
               </PromptInputButton>
-              <PromptInputSelect
+              {/* <PromptInputSelect
                 onValueChange={(value) => {
                   setModel(value);
                 }}
@@ -176,9 +149,9 @@ export default function Home() {
                     </PromptInputSelectItem>
                   ))}
                 </PromptInputSelectContent>
-              </PromptInputSelect>
+              </PromptInputSelect> */}
             </PromptInputTools>
-            <PromptInputSubmit disabled={!text && status !== 'streaming'} status={status === 'streaming' ? 'streaming' : 'submitted'} />
+            <PromptInputSubmit disabled={!text} />
           </PromptInputFooter>
         </PromptInput>
       </div>
