@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { GoogleSsoButton } from "./auth/google-sso-button";
 
 // Menu items for Telkom University Research Directory
 const items = [
@@ -88,6 +89,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="border-t p-4">
+        <GoogleSsoButton />
         <p className="text-xs text-muted-foreground text-center">
           "Knowledge doesn't wait to be found. It waits to be asked."
         </p>

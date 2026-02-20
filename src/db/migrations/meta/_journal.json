@@ -8,6 +8,13 @@
       "when": 1771351628935,
       "tag": "0000_striped_rockslide",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771593197022,
+      "tag": "0001_brave_black_bolt",
+      "breakpoints": true
     }
   ]
 }

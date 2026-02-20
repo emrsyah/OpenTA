@@ -12,7 +12,9 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
-    "db:pull": "drizzle-kit pull"
+    "db:pull": "drizzle-kit pull",
+    "auth:generate": "bunx @better-auth/cli generate --output ./src/lib/auth/schema.ts --config ./src/lib/auth/index.ts",
+    "auth:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.29",
@@ -23,6 +25,7 @@
     "@streamdown/math": "^1.0.2",
     "@streamdown/mermaid": "^1.0.2",
     "ai": "^6.0.87",
+    "better-auth": "^1.4.18",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
