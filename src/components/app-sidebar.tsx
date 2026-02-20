@@ -1,6 +1,16 @@
 "use client";
 
 import {
+  Bookmark,
+  BookOpen,
+  GraduationCap,
+  MessageSquare,
+  Search,
+  Settings,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -12,17 +22,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import {
-  BookOpen,
-  MessageSquare,
-  Search,
-  Bookmark,
-  Settings,
-  GraduationCap,
-} from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { authClient } from "@/lib/auth/client";
 import { GoogleSsoButton } from "./auth/google-sso-button";
+import { UserMenu } from "./auth/user-menu";
 
 // Menu items for Telkom University Research Directory
 const items = [
@@ -54,6 +56,8 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { data: session, isPending } = authClient.useSession();
+  const isAuthenticated = !isPending && session?.user;
 
   return (
     <Sidebar>
@@ -89,10 +93,21 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="border-t p-4">
-        <GoogleSsoButton />
-        <p className="text-xs text-muted-foreground text-center">
-          "Knowledge doesn't wait to be found. It waits to be asked."
-        </p>
+        {isAuthenticated ? (
+          <div className="flex flex-col gap-2">
+            <UserMenu />
+            <p className="text-xs text-muted-foreground text-center">
+              "Knowledge doesn't wait to be found. It waits to be asked."
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <GoogleSsoButton />
+            <p className="text-xs text-muted-foreground text-center">
+              "Knowledge doesn't wait to be found. It waits to be asked."
+            </p>
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   );

@@ -1,36 +1,15 @@
 "use client";
 
+import { GlobeIcon } from "lucide-react";
+import { nanoid } from "nanoid";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   Attachment,
   AttachmentPreview,
   AttachmentRemove,
   Attachments,
 } from "@/components/ai-elements/attachments";
-import {
-  PromptInput,
-  PromptInputActionAddAttachments,
-  PromptInputActionMenu,
-  PromptInputActionMenuContent,
-  PromptInputActionMenuTrigger,
-  PromptInputBody,
-  PromptInputButton,
-  PromptInputHeader,
-  type PromptInputMessage,
-  PromptInputSelect,
-  PromptInputSelectContent,
-  PromptInputSelectItem,
-  PromptInputSelectTrigger,
-  PromptInputSelectValue,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  PromptInputFooter,
-  PromptInputTools,
-  usePromptInputAttachments,
-} from "@/components/ai-elements/prompt-input";
-import { GlobeIcon } from "lucide-react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { nanoid } from "nanoid";
 import {
   Conversation,
   ConversationContent,
@@ -41,6 +20,28 @@ import {
   MessageContent,
   MessageResponse,
 } from "@/components/ai-elements/message";
+import {
+  PromptInput,
+  PromptInputActionAddAttachments,
+  PromptInputActionMenu,
+  PromptInputActionMenuContent,
+  PromptInputActionMenuTrigger,
+  PromptInputBody,
+  PromptInputButton,
+  PromptInputFooter,
+  PromptInputHeader,
+  type PromptInputMessage,
+  PromptInputSelect,
+  PromptInputSelectContent,
+  PromptInputSelectItem,
+  PromptInputSelectTrigger,
+  PromptInputSelectValue,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputTools,
+  usePromptInputAttachments,
+} from "@/components/ai-elements/prompt-input";
+import { SuggestionChips } from "@/components/suggestion-chips";
 
 const PromptInputAttachmentsDisplay = () => {
   const attachments = usePromptInputAttachments();
@@ -90,11 +91,43 @@ export default function Home() {
     router.push(`/${conversationId}?${params.toString()}`);
   };
 
+  const handleSuggestionClick = (suggestionText: string) => {
+    setText(suggestionText);
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-2rem)]">
       <Conversation className="flex-1 overflow-hidden">
         <ConversationContent>
-          <div />
+          <div className="flex flex-col items-center justify-center h-full px-4">
+            {/* ASCII Owl Mascot */}
+            <pre className="text-foreground/30 text-xs mb-6 select-none hidden sm:block">
+              {`   _____
+  /     \\
+ |  O O  |
+ |   >   |
+  \\ ___/
+   |___|`}
+            </pre>
+
+            {/* Welcome Message */}
+            <div className="text-center max-w-2xl space-y-4">
+              <h1 className="text-4xl font-bold tracking-tight">
+                Welcome to Open TA Tel-U
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                Ask anything about Telkom University research papers.
+                <br />
+                Our AI helps you discover, understand, and discuss academic
+                research.
+              </p>
+            </div>
+
+            {/* Suggestion Chips */}
+            <div className="w-full max-w-2xl mt-12">
+              <SuggestionChips onSelect={handleSuggestionClick} />
+            </div>
+          </div>
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
@@ -111,7 +144,9 @@ export default function Home() {
           </PromptInputHeader>
           <PromptInputBody>
             <PromptInputTextarea
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setText(e.target.value)
+              }
               value={text}
               placeholder="Type your message..."
             />
