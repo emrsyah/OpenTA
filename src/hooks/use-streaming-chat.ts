@@ -20,13 +20,26 @@ export interface Source {
   citation_number: number;
 }
 
+export interface PlanStep {
+  id: number;
+  title: string;
+  description: string;
+  needs_search: boolean;
+  status: "pending" | "active" | "done";
+  thinking: string;
+  searchQuery?: string;
+  paperCount?: number;
+}
+
 export interface ChatMessage {
   id: string;
   role: MessageRole;
   content: string;
   parts: TextPart[];
   sources?: Source[];
-  rationale?: string;
+  classifyStatus?: string;
+  planSteps?: PlanStep[];
+  answerStarted?: boolean;
 }
 
 interface SendMessageOptions {
@@ -86,13 +99,8 @@ export function useStreamingChat(api = "/api/chat") {
           }),
         });
 
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        if (!response.body) {
-          throw new Error("No response body");
-        }
+        if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+        if (!response.body) throw new Error("No response body");
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -105,6 +113,13 @@ export function useStreamingChat(api = "/api/chat") {
             if (idx !== -1) updated[idx] = updater(updated[idx]);
             return updated;
           });
+        };
+
+        const updateStep = (step_id: number, updater: (s: PlanStep) => PlanStep) => {
+          updateAssistant((msg) => ({
+            ...msg,
+            planSteps: (msg.planSteps ?? []).map((s) => (s.id === step_id ? updater(s) : s)),
+          }));
         };
 
         while (true) {
@@ -123,6 +138,55 @@ export function useStreamingChat(api = "/api/chat") {
               const event = JSON.parse(trimmed);
 
               switch (event.type) {
+                case "status":
+                  updateAssistant((msg) => ({ ...msg, classifyStatus: event.step }));
+                  break;
+
+                case "plan":
+                  updateAssistant((msg) => ({
+                    ...msg,
+                    planSteps: (event.steps as Array<{ id: number; title: string; description: string; needs_search: boolean }>).map((s) => ({
+                      id: s.id,
+                      title: s.title,
+                      description: s.description,
+                      needs_search: s.needs_search,
+                      status: "pending" as const,
+                      thinking: "",
+                    })),
+                  }));
+                  break;
+
+                case "step_start":
+                  updateStep(event.step_id, (s) => ({ ...s, status: "active" }));
+                  break;
+
+                case "step_action":
+                  if (event.action === "search" && event.query) {
+                    updateStep(event.step_id, (s) => ({ ...s, searchQuery: event.query }));
+                  }
+                  break;
+
+                case "step_action_result":
+                  if (event.action === "search") {
+                    updateStep(event.step_id, (s) => ({ ...s, paperCount: event.paper_count }));
+                  }
+                  break;
+
+                case "step_thinking":
+                  updateStep(event.step_id, (s) => ({
+                    ...s,
+                    thinking: s.thinking + event.content,
+                  }));
+                  break;
+
+                case "step_done":
+                  updateStep(event.step_id, (s) => ({ ...s, status: "done" }));
+                  break;
+
+                case "answer_start":
+                  updateAssistant((msg) => ({ ...msg, answerStarted: true }));
+                  break;
+
                 case "text":
                   updateAssistant((msg) => {
                     const newText = msg.content + event.content;
@@ -130,18 +194,15 @@ export function useStreamingChat(api = "/api/chat") {
                   });
                   break;
 
-                case "rationale":
-                  updateAssistant((msg) => ({
-                    ...msg,
-                    rationale: (msg.rationale ?? "") + event.content,
-                  }));
-                  break;
-
                 case "sources":
                   updateAssistant((msg) => ({ ...msg, sources: event.data }));
                   break;
 
                 case "finish":
+                  updateAssistant((msg) => ({
+                    ...msg,
+                    planSteps: (msg.planSteps ?? []).map((s) => ({ ...s, status: "done" as const })),
+                  }));
                   break;
 
                 case "error":
