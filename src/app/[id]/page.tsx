@@ -3,6 +3,7 @@
 // ───────────────────────────────────────────────────────────────────────────────
 
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import {
   ChatConversationArea,
   ChatFrame,
@@ -10,6 +11,7 @@ import {
   ChatProvider,
   type SourceType,
 } from "@/components/chat";
+import { getConversationById } from "@/lib/db/conversations";
 
 export async function generateMetadata({
   params,
@@ -41,6 +43,17 @@ export default async function ChatPage({
 }) {
   const { id } = await params;
   const { q, sources } = await searchParams;
+
+  // Validate conversation exists
+  // Note: New conversations with an initial query (q) are allowed
+  // The conversation is created in the database when the first message is processed
+  const conversation = await getConversationById(id);
+
+  // If conversation doesn't exist and there's no initial query,
+  // this is an invalid conversation ID (e.g., user typed random URL)
+  if (!conversation && !q) {
+    redirect("/?error=conversation_not_found");
+  }
 
   // Parse source types from URL parameter
   const initialSourceTypes: SourceType[] = sources

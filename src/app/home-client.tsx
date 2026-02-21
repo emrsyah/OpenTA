@@ -3,8 +3,8 @@
 import { GlobeIcon } from "lucide-react";
 import { nanoid } from "nanoid";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Attachment,
@@ -77,11 +77,29 @@ const models = [
 
 export function HomePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, isPending } = authClient.useSession();
   const [text, setText] = useState<string>("");
   const [model, setModel] = useState<string>(models[0].id);
   const [useWebSearch, setUseWebSearch] = useState<boolean>(false);
   const [sourceTypes, setSourceTypes] = useState<SourceType[]>(["all"]);
+
+  // Handle error parameters from redirects
+  useEffect(() => {
+    const error = searchParams.get("error");
+
+    if (error === "conversation_not_found") {
+      toast.error("Conversation not found", {
+        description:
+          "The conversation you're looking for doesn't exist or has been deleted.",
+        id: "conversation-not-found",
+      });
+
+      // Clean up URL by removing the error parameter
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, [searchParams]);
 
   const handleSubmit = (message: PromptInputMessage) => {
     const hasText = Boolean(message.text);
