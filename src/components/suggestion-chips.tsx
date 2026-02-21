@@ -25,8 +25,6 @@ export function SuggestionChips({ onSelect }: SuggestionChipsProps) {
   const suggestions = [
     "Find papers about machine learning in telecommunications",
     "What research has been done on 5G network optimization?",
-    "Show me recent thesis on cybersecurity",
-    "Find papers by Dr. Budi Santoso about IoT",
     "What are the trending topics in computer science research?",
   ];
 

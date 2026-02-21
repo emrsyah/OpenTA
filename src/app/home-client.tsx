@@ -2,6 +2,7 @@
 
 import { GlobeIcon } from "lucide-react";
 import { nanoid } from "nanoid";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -133,27 +134,28 @@ export function HomePage() {
     <div className="flex flex-col h-[calc(100vh-2rem)]">
       <Conversation className="flex-1 overflow-hidden">
         <ConversationContent>
-          <div className="flex flex-col items-center justify-center h-full px-4">
-            {/* ASCII Owl Mascot */}
-            <pre className="text-foreground/30 text-xs mb-6 select-none hidden sm:block">
-              {`   _____
-  /     \\
-  |  O O  |
-  |   >   |
-   \\ ___/
-    |___|`}
-            </pre>
+          <div className="flex flex-col items-center justify-center h-full px-4 animate-in mt-16 fade-in slide-in-from-bottom-4 duration-1000">
+            {/* Logo Section */}
+            <div className="mb-10 relative">
+              <div className="absolute -inset-8 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+              <div className="relative z-10 flex items-center justify-center bg-background border rounded-3xl p-2 shadow-2xl">
+                <Image
+                  src="/favicon/android-chrome-192x192.png"
+                  alt="OpenTA Logo"
+                  width={80}
+                  height={80}
+                  className="w-20 h-20 drop-shadow-sm"
+                />
+              </div>
+            </div>
 
             {/* Welcome Message */}
-            <div className="text-center max-w-2xl space-y-4">
-              <h1 className="text-4xl font-bold tracking-tight">
-                Welcome to Open TA Tel-U
+            <div className="text-center max-w-2xl space-y-6">
+              <h1 className="text-5xl font-extrabold tracking-tight bg-linear-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
+                OpenTA
               </h1>
-              <p className="text-lg text-muted-foreground">
-                Ask anything about Telkom University research papers.
-                <br />
-                Our AI helps you discover, understand, and discuss academic
-                research.
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                Search, ask, and discover insights from academic papers.
               </p>
             </div>
 
@@ -199,7 +201,7 @@ export function HomePage() {
               />
               <PromptInputButton
                 onClick={() => setUseWebSearch(!useWebSearch)}
-                tooltip={{ content: "Search the web", shortcut: "⌘K" }}
+                tooltip={{ content: "Change to Deep Research mode" }}
                 variant={useWebSearch ? "default" : "ghost"}
                 type="button"
               >

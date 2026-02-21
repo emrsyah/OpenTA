@@ -156,7 +156,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b px-6 py-4">
+      <SidebarHeader className="border-b px-6 py-4 hover-scrollbar">
         <div className="flex items-center gap-2">
           <Image
             src="/favicon/favicon-32x32.png"
@@ -258,7 +258,7 @@ export function AppSidebar() {
         )}
 
       </SidebarContent>
-      <SidebarFooter className="border-t p-4">
+      <SidebarFooter className="border-t p-4 hover-scrollbar">
         {isAuthenticated ? (
           <div className="flex flex-col gap-2">
             <UserMenu />

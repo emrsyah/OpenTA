@@ -6,6 +6,7 @@
 
 import { FilterIcon } from "lucide-react";
 import { useCallback, useState } from "react";
+import { PromptInputButton } from "@/components/ai-elements/prompt-input";
 import type { SourceType } from "@/components/chat";
 import {
   DropdownMenu,
@@ -79,19 +80,15 @@ export function SourceSelector({
   return (
     <DropdownMenu onOpenChange={setOpen} open={open}>
       <DropdownMenuTrigger asChild>
-        <button
-          className={cn(
-            "inline-flex items-center gap-2 px-2 py-1 text-xs font-medium rounded-sm transition-colors",
-            "hover:bg-accent hover:text-accent-foreground",
-            "data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
-            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-            className,
-          )}
+        <PromptInputButton
+          tooltip={{ content: "Filter by source type" }}
+          variant={open ? "default" : "ghost"}
+          className={className}
           type="button"
         >
-          <FilterIcon className="size-3.5" />
+          <FilterIcon size={16} />
           <span>{getDisplayLabel()}</span>
-        </button>
+        </PromptInputButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-48">
         <DropdownMenuLabel>Filter by source</DropdownMenuLabel>
