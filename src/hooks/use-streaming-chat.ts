@@ -1,8 +1,8 @@
 "use client";
 
 import type { ChatStatus } from "ai";
-import { useCallback, useRef, useState } from "react";
 import { nanoid } from "nanoid";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type MessageRole = "user" | "assistant";
 
@@ -46,11 +46,126 @@ interface SendMessageOptions {
   body?: Record<string, unknown>;
 }
 
-export function useStreamingChat(api = "/api/chat") {
+interface DbMessage {
+  question: string;
+  answer: string;
+  sources: Source[] | null;
+  searchQuery: string | null;
+}
+
+interface UseStreamingChatOptions {
+  conversationId?: string;
+  api?: string;
+  onConversationCreated?: (conversationId: string) => void;
+  onTitleGenerated?: (conversationId: string, title: string) => void;
+}
+
+/**
+ * Convert DB message to ChatMessage format
+ */
+function dbMessageToChatMessage(
+  question: string,
+  answer: string,
+  sources?: Source[] | null,
+  searchQuery?: string | null,
+): [ChatMessage, ChatMessage] {
+  const userMessage: ChatMessage = {
+    id: nanoid(),
+    role: "user",
+    content: question,
+    parts: [{ type: "text", text: question }],
+  };
+
+  const assistantMessage: ChatMessage = {
+    id: nanoid(),
+    role: "assistant",
+    content: answer,
+    parts: [{ type: "text", text: answer }],
+    sources: sources || undefined,
+  };
+
+  return [userMessage, assistantMessage];
+}
+
+/**
+ * Load conversation history from database
+ */
+async function loadConversationHistory(
+  conversationId: string,
+): Promise<ChatMessage[]> {
+  try {
+    const response = await fetch(
+      `/api/conversations/${conversationId}/messages`,
+    );
+
+    // 404 is normal for new conversations - return empty array
+    if (response.status === 404) {
+      return [];
+    }
+
+    if (!response.ok) {
+      console.error("Failed to load conversation history");
+      return [];
+    }
+
+    const data = await response.json();
+    const dbMessages: DbMessage[] = data.messages || [];
+
+    // Convert DB messages to ChatMessage format
+    const chatMessages: ChatMessage[] = [];
+    for (const dbMsg of dbMessages) {
+      const [userMsg, assistantMsg] = dbMessageToChatMessage(
+        dbMsg.question,
+        dbMsg.answer,
+        dbMsg.sources,
+        dbMsg.searchQuery,
+      );
+      chatMessages.push(userMsg, assistantMsg);
+    }
+
+    return chatMessages;
+  } catch (error) {
+    console.error("Error loading conversation history:", error);
+    return [];
+  }
+}
+
+export function useStreamingChat(options?: UseStreamingChatOptions) {
+  const {
+    conversationId,
+    api = "/api/chat",
+    onConversationCreated,
+    onTitleGenerated,
+  } = options || {};
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [status, setStatus] = useState<ChatStatus>("ready");
   const [error, setError] = useState<Error | null>(null);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const conversationCreatedRef = useRef(false);
+
+  // Load conversation history when conversationId changes
+  useEffect(() => {
+    if (!conversationId) {
+      setMessages([]);
+      return;
+    }
+
+    const loadHistory = async () => {
+      setIsLoadingHistory(true);
+      try {
+        const history = await loadConversationHistory(conversationId);
+        // Only set messages if none have been added yet (avoid wiping in-flight messages)
+        setMessages((prev) => (prev.length === 0 ? history : prev));
+      } catch (error) {
+        console.error("Failed to load conversation history:", error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadHistory();
+  }, [conversationId]);
 
   const stop = useCallback(() => {
     abortControllerRef.current?.abort();
@@ -99,14 +214,17 @@ export function useStreamingChat(api = "/api/chat") {
           }),
         });
 
-        if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+        if (!response.ok)
+          throw new Error(`Request failed with status ${response.status}`);
         if (!response.body) throw new Error("No response body");
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let lineBuffer = "";
 
-        const updateAssistant = (updater: (msg: ChatMessage) => ChatMessage) => {
+        const updateAssistant = (
+          updater: (msg: ChatMessage) => ChatMessage,
+        ) => {
           setMessages((prev) => {
             const updated = [...prev];
             const idx = updated.findIndex((m) => m.id === assistantId);
@@ -115,10 +233,15 @@ export function useStreamingChat(api = "/api/chat") {
           });
         };
 
-        const updateStep = (step_id: number, updater: (s: PlanStep) => PlanStep) => {
+        const updateStep = (
+          step_id: number,
+          updater: (s: PlanStep) => PlanStep,
+        ) => {
           updateAssistant((msg) => ({
             ...msg,
-            planSteps: (msg.planSteps ?? []).map((s) => (s.id === step_id ? updater(s) : s)),
+            planSteps: (msg.planSteps ?? []).map((s) =>
+              s.id === step_id ? updater(s) : s,
+            ),
           }));
         };
 
@@ -139,13 +262,23 @@ export function useStreamingChat(api = "/api/chat") {
 
               switch (event.type) {
                 case "status":
-                  updateAssistant((msg) => ({ ...msg, classifyStatus: event.step }));
+                  updateAssistant((msg) => ({
+                    ...msg,
+                    classifyStatus: event.step,
+                  }));
                   break;
 
                 case "plan":
                   updateAssistant((msg) => ({
                     ...msg,
-                    planSteps: (event.steps as Array<{ id: number; title: string; description: string; needs_search: boolean }>).map((s) => ({
+                    planSteps: (
+                      event.steps as Array<{
+                        id: number;
+                        title: string;
+                        description: string;
+                        needs_search: boolean;
+                      }>
+                    ).map((s) => ({
                       id: s.id,
                       title: s.title,
                       description: s.description,
@@ -157,18 +290,27 @@ export function useStreamingChat(api = "/api/chat") {
                   break;
 
                 case "step_start":
-                  updateStep(event.step_id, (s) => ({ ...s, status: "active" }));
+                  updateStep(event.step_id, (s) => ({
+                    ...s,
+                    status: "active",
+                  }));
                   break;
 
                 case "step_action":
                   if (event.action === "search" && event.query) {
-                    updateStep(event.step_id, (s) => ({ ...s, searchQuery: event.query }));
+                    updateStep(event.step_id, (s) => ({
+                      ...s,
+                      searchQuery: event.query,
+                    }));
                   }
                   break;
 
                 case "step_action_result":
                   if (event.action === "search") {
-                    updateStep(event.step_id, (s) => ({ ...s, paperCount: event.paper_count }));
+                    updateStep(event.step_id, (s) => ({
+                      ...s,
+                      paperCount: event.paper_count,
+                    }));
                   }
                   break;
 
@@ -190,7 +332,11 @@ export function useStreamingChat(api = "/api/chat") {
                 case "text":
                   updateAssistant((msg) => {
                     const newText = msg.content + event.content;
-                    return { ...msg, content: newText, parts: [{ type: "text", text: newText }] };
+                    return {
+                      ...msg,
+                      content: newText,
+                      parts: [{ type: "text", text: newText }],
+                    };
                   });
                   break;
 
@@ -198,11 +344,33 @@ export function useStreamingChat(api = "/api/chat") {
                   updateAssistant((msg) => ({ ...msg, sources: event.data }));
                   break;
 
+                case "done":
+                  // Signals answer + sources are complete; sidebar refresh happens on finish
+                  break;
+
+                case "title":
+                  if (conversationId && onTitleGenerated) {
+                    onTitleGenerated(conversationId, event.content);
+                  }
+                  break;
+
                 case "finish":
                   updateAssistant((msg) => ({
                     ...msg,
-                    planSteps: (msg.planSteps ?? []).map((s) => ({ ...s, status: "done" as const })),
+                    planSteps: (msg.planSteps ?? []).map((s) => ({
+                      ...s,
+                      status: "done" as const,
+                    })),
                   }));
+                  // Notify sidebar to refresh after everything is complete
+                  if (
+                    conversationId &&
+                    onConversationCreated &&
+                    !conversationCreatedRef.current
+                  ) {
+                    conversationCreatedRef.current = true;
+                    onConversationCreated(conversationId);
+                  }
                   break;
 
                 case "error":
@@ -227,5 +395,5 @@ export function useStreamingChat(api = "/api/chat") {
     [api, messages],
   );
 
-  return { messages, status, error, sendMessage, stop };
+  return { messages, status, error, sendMessage, stop, isLoadingHistory };
 }

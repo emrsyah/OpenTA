@@ -85,6 +85,8 @@ export default function Home() {
       return;
     }
 
+    // Generate a new conversation ID (UUID)
+    // Backend will handle database persistence when processing the message
     const conversationId = nanoid();
     const params = new URLSearchParams();
     if (message.text) params.set("q", message.text);

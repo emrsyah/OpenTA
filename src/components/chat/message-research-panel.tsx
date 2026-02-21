@@ -1,3 +1,5 @@
+"use client";
+
 import { CheckIcon, Loader2Icon, SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import {

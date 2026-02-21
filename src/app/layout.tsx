@@ -1,6 +1,6 @@
+import { GeistPixelSquare } from "geist/font/pixel";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { GeistPixelSquare } from "geist/font/pixel";
 import "./globals.css";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_APP_URL || "https://open-ta-telyu.vercel.app",
   ),
   title: {
-    default: "Open TA Telyu",
-    template: "%s | Open TA Telyu",
+    default: "Open TA",
+    template: "%s | Open TA",
   },
   description:
     "The intelligent open directory for Telkom University research. Search, ask, and discover insights from alumni papers using advanced AI.",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Telyutizen" }],
   creator: "Telyutizen",
-  publisher: "Open TA Telyu",
+  publisher: "Open TA",
   robots: {
     index: true,
     follow: true,
@@ -52,26 +52,37 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Open TA Telyu",
+    title: "Open TA",
     description:
       "The intelligent open directory for Telkom University research. Search, ask, and discover insights from alumni papers using advanced AI.",
     url: "https://open-ta-telyu.vercel.app",
-    siteName: "Open TA Telyu",
+    siteName: "Open TA",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Open TA Telyu",
+    title: "Open TA",
     description:
       "The intelligent open directory for Telkom University research. Search, ask, and discover insights from alumni papers using advanced AI.",
     creator: "@telyutizen",
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/favicon/favicon.ico" },
+      { url: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    shortcut: "/favicon/favicon.ico",
+    apple: [
+      {
+        url: "/favicon/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
   },
+  manifest: "/favicon/site.webmanifest",
 };
 
 export default function RootLayout({

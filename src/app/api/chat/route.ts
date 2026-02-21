@@ -201,6 +201,16 @@ export async function POST(req: NextRequest) {
                       ),
                     );
                   }
+                  // Signal completion so the FE can update sidebar
+                  controller.enqueue(
+                    encoder.encode(JSON.stringify({ type: "done" }) + "\n"),
+                  );
+                } else if (parsed.type === "title") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({ type: "title", content: parsed.content }) + "\n",
+                    ),
+                  );
                 } else if (parsed.type === "error") {
                   console.error("Backend stream error:", parsed.content);
                   controller.enqueue(
