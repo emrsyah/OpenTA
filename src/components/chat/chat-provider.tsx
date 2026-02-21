@@ -9,12 +9,17 @@ import { useConversations } from "@/hooks/use-conversations";
 import type { ChatMessage } from "@/hooks/use-streaming-chat";
 import { useStreamingChat } from "@/hooks/use-streaming-chat";
 
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
+export type SourceType = "all" | "s1" | "s2" | "s3" | "book";
+
 // ─── Context Interface ─────────────────────────────────────────────────────────
 
 export interface ChatState {
   conversationId: string;
   model: string;
   webSearchEnabled: boolean;
+  sourceTypes: SourceType[];
   messages: ChatMessage[];
   status: "ready" | "streaming" | "error" | "submitted";
   isLoadingHistory: boolean;
@@ -23,6 +28,7 @@ export interface ChatState {
 export interface ChatActions {
   setWebSearchEnabled: (enabled: boolean) => void;
   setModel: (model: string) => void;
+  setSourceTypes: (types: SourceType[]) => void;
   sendMessage: (text: string, files?: any[]) => void;
 }
 
@@ -45,6 +51,7 @@ export interface ChatProviderProps {
   conversationId: string;
   initialWebSearch?: boolean;
   initialQuery?: string;
+  initialSourceTypes?: SourceType[];
 }
 
 export function ChatProvider({
@@ -52,13 +59,25 @@ export function ChatProvider({
   conversationId,
   initialWebSearch = false,
   initialQuery,
+  initialSourceTypes,
 }: ChatProviderProps) {
-  const { updateConversationTitle, refresh } = useConversations();
+  const { addOptimisticConversation, updateConversationTitle, refresh } = useConversations();
   const initialSentRef = useRef(false);
+
+  // Optimistic update: add conversation to sidebar immediately on mount
+  // This shows a skeleton while waiting for the real data
+  useEffect(() => {
+    if (conversationId && initialQuery) {
+      addOptimisticConversation(conversationId);
+    }
+  }, [conversationId, initialQuery]);
 
   // State
   const [model, setModel] = useState("gpt-4o");
   const [webSearchEnabled, setWebSearchEnabled] = useState(initialWebSearch);
+  const [sourceTypes, setSourceTypes] = useState<SourceType[]>(
+    initialSourceTypes ?? ["all"],
+  );
 
   // Hook integration
   const { messages, status, sendMessage, isLoadingHistory } = useStreamingChat({
@@ -101,6 +120,7 @@ export function ChatProvider({
     conversationId,
     model,
     webSearchEnabled,
+    sourceTypes,
     messages,
     status,
     isLoadingHistory,
@@ -109,6 +129,7 @@ export function ChatProvider({
   const actions: ChatActions = {
     setWebSearchEnabled,
     setModel,
+    setSourceTypes,
     sendMessage: sendMessageWithFiles,
   };
 

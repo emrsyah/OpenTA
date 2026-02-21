@@ -1,10 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
   try {
+    // Verify authentication on server side
+    const session = await auth.api.getSession({
+      headers: req.headers,
+    });
+
+    if (!session) {
+      return NextResponse.json(
+        { error: "Authentication required. Please sign in to send messages." },
+        { status: 401 },
+      );
+    }
+
     const body = await req.json();
     const { messages, conversationId, model, webSearch } = body;
 
@@ -124,80 +137,124 @@ export async function POST(req: NextRequest) {
                 if (parsed.type === "status") {
                   controller.enqueue(
                     encoder.encode(
-                      JSON.stringify({ type: "status", step: parsed.step, message: parsed.message }) + "\n",
+                      JSON.stringify({
+                        type: "status",
+                        step: parsed.step,
+                        message: parsed.message,
+                      }) + "\n",
                     ),
                   );
                 } else if (parsed.type === "plan") {
                   controller.enqueue(
                     encoder.encode(
-                      JSON.stringify({ type: "plan", steps: parsed.steps }) + "\n",
+                      JSON.stringify({ type: "plan", steps: parsed.steps }) +
+                        "\n",
                     ),
                   );
                 } else if (parsed.type === "step_start") {
                   controller.enqueue(
                     encoder.encode(
-                      JSON.stringify({ type: "step_start", step_id: parsed.step_id, title: parsed.title, description: parsed.description }) + "\n",
+                      JSON.stringify({
+                        type: "step_start",
+                        step_id: parsed.step_id,
+                        title: parsed.title,
+                        description: parsed.description,
+                      }) + "\n",
                     ),
                   );
                 } else if (parsed.type === "step_action") {
                   controller.enqueue(
                     encoder.encode(
-                      JSON.stringify({ type: "step_action", step_id: parsed.step_id, action: parsed.action, query: parsed.query }) + "\n",
+                      JSON.stringify({
+                        type: "step_action",
+                        step_id: parsed.step_id,
+                        action: parsed.action,
+                        query: parsed.query,
+                      }) + "\n",
                     ),
                   );
                 } else if (parsed.type === "step_action_result") {
                   controller.enqueue(
                     encoder.encode(
-                      JSON.stringify({ type: "step_action_result", step_id: parsed.step_id, action: parsed.action, paper_count: parsed.paper_count }) + "\n",
+                      JSON.stringify({
+                        type: "step_action_result",
+                        step_id: parsed.step_id,
+                        action: parsed.action,
+                        paper_count: parsed.paper_count,
+                      }) + "\n",
                     ),
                   );
                 } else if (parsed.type === "step_thinking") {
                   controller.enqueue(
                     encoder.encode(
-                      JSON.stringify({ type: "step_thinking", step_id: parsed.step_id, content: parsed.content }) + "\n",
+                      JSON.stringify({
+                        type: "step_thinking",
+                        step_id: parsed.step_id,
+                        content: parsed.content,
+                      }) + "\n",
                     ),
                   );
                 } else if (parsed.type === "step_done") {
                   controller.enqueue(
                     encoder.encode(
-                      JSON.stringify({ type: "step_done", step_id: parsed.step_id }) + "\n",
+                      JSON.stringify({
+                        type: "step_done",
+                        step_id: parsed.step_id,
+                      }) + "\n",
                     ),
                   );
                 } else if (parsed.type === "answer_start") {
                   controller.enqueue(
-                    encoder.encode(JSON.stringify({ type: "answer_start" }) + "\n"),
+                    encoder.encode(
+                      JSON.stringify({ type: "answer_start" }) + "\n",
+                    ),
                   );
                 } else if (parsed.type === "search_query" && parsed.query) {
                   controller.enqueue(
                     encoder.encode(
-                      JSON.stringify({ type: "search_query", query: parsed.query }) + "\n",
+                      JSON.stringify({
+                        type: "search_query",
+                        query: parsed.query,
+                      }) + "\n",
                     ),
                   );
                 } else if (parsed.type === "token" && parsed.content) {
                   hasTokens = true;
                   controller.enqueue(
                     encoder.encode(
-                      JSON.stringify({ type: "text", content: parsed.content }) + "\n",
+                      JSON.stringify({
+                        type: "text",
+                        content: parsed.content,
+                      }) + "\n",
                     ),
                   );
                 } else if (parsed.type === "rationale" && parsed.content) {
                   controller.enqueue(
                     encoder.encode(
-                      JSON.stringify({ type: "rationale", content: parsed.content }) + "\n",
+                      JSON.stringify({
+                        type: "rationale",
+                        content: parsed.content,
+                      }) + "\n",
                     ),
                   );
                 } else if (parsed.type === "done") {
                   if (!hasTokens && parsed.content) {
                     controller.enqueue(
                       encoder.encode(
-                        JSON.stringify({ type: "text", content: parsed.content }) + "\n",
+                        JSON.stringify({
+                          type: "text",
+                          content: parsed.content,
+                        }) + "\n",
                       ),
                     );
                   }
                   if (parsed.sources?.length) {
                     controller.enqueue(
                       encoder.encode(
-                        JSON.stringify({ type: "sources", data: parsed.sources }) + "\n",
+                        JSON.stringify({
+                          type: "sources",
+                          data: parsed.sources,
+                        }) + "\n",
                       ),
                     );
                   }
@@ -208,14 +265,20 @@ export async function POST(req: NextRequest) {
                 } else if (parsed.type === "title") {
                   controller.enqueue(
                     encoder.encode(
-                      JSON.stringify({ type: "title", content: parsed.content }) + "\n",
+                      JSON.stringify({
+                        type: "title",
+                        content: parsed.content,
+                      }) + "\n",
                     ),
                   );
                 } else if (parsed.type === "error") {
                   console.error("Backend stream error:", parsed.content);
                   controller.enqueue(
                     encoder.encode(
-                      JSON.stringify({ type: "error", content: parsed.content }) + "\n",
+                      JSON.stringify({
+                        type: "error",
+                        content: parsed.content,
+                      }) + "\n",
                     ),
                   );
                 }

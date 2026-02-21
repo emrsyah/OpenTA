@@ -48,13 +48,43 @@ export function useConversations() {
         const response = await fetch("/api/conversations?limit=10");
         if (response.ok) {
           const data = await response.json();
-          // Treat "New Chat" as skeleton (null) to show loading state
-          globalConversations = (data.conversations || []).map(
+          const dbConversations = (data.conversations || []).map(
             (conv: Conversation) => ({
               ...conv,
               title: conv.title === "New Chat" ? null : conv.title,
             }),
           );
+
+          // Merge strategy: preserve optimistic conversations not yet in DB
+          const optimisticIds = new Set(
+            globalConversations
+              .filter((c) => c.title === null)
+              .map((c) => c.id)
+          );
+
+          const dbMap = new Map(dbConversations.map((c: Conversation) => [c.id, c]));
+
+          const merged: Conversation[] = [];
+          const seen = new Set<string>();
+
+          for (const dbConv of dbConversations) {
+            merged.push(dbConv);
+            seen.add(dbConv.id);
+          }
+
+          for (const optConv of globalConversations) {
+            if (optConv.title === null && !seen.has(optConv.id)) {
+              merged.push(optConv);
+              seen.add(optConv.id);
+            }
+          }
+
+          merged.sort(
+            (a, b) =>
+              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
+
+          globalConversations = merged;
           notifyListeners();
         }
       } catch (error) {
@@ -67,6 +97,21 @@ export function useConversations() {
 
   return {
     conversations: globalConversations,
+    addOptimisticConversation: (id: string) => {
+      // Check if already exists to avoid duplicates
+      if (globalConversations.find((c) => c.id === id)) {
+        return;
+      }
+      // Add to beginning with null title (skeleton state)
+      const newConversation: Conversation = {
+        id,
+        title: null, // null = skeleton/loading state
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      globalConversations = [newConversation, ...globalConversations];
+      notifyListeners();
+    },
     updateConversationTitle: (id: string, title: string) => {
       const index = globalConversations.findIndex((c) => c.id === id);
       if (index !== -1) {
@@ -88,13 +133,49 @@ export function useConversations() {
         const response = await fetch("/api/conversations?limit=10");
         if (response.ok) {
           const data = await response.json();
-          // Treat "New Chat" as skeleton (null) to show loading state
-          globalConversations = (data.conversations || []).map(
+          const dbConversations = (data.conversations || []).map(
             (conv: Conversation) => ({
               ...conv,
               title: conv.title === "New Chat" ? null : conv.title,
             }),
           );
+
+          // Merge strategy: preserve optimistic conversations not yet in DB
+          // Identify optimistic conversations (title === null)
+          const optimisticIds = new Set(
+            globalConversations
+              .filter((c) => c.title === null)
+              .map((c) => c.id)
+          );
+
+          // Create a map of DB conversations for O(1) lookup
+          const dbMap = new Map(dbConversations.map((c: Conversation) => [c.id, c]));
+
+          // Merge: start with DB conversations, add optimistic ones not in DB
+          const merged: Conversation[] = [];
+          const seen = new Set<string>();
+
+          // Add all DB conversations first
+          for (const dbConv of dbConversations) {
+            merged.push(dbConv);
+            seen.add(dbConv.id);
+          }
+
+          // Add optimistic conversations that aren't in DB yet
+          for (const optConv of globalConversations) {
+            if (optConv.title === null && !seen.has(optConv.id)) {
+              merged.push(optConv);
+              seen.add(optConv.id);
+            }
+          }
+
+          // Sort by updatedAt (newest first)
+          merged.sort(
+            (a, b) =>
+              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
+
+          globalConversations = merged;
           notifyListeners();
         }
       } catch (error) {

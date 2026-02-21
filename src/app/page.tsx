@@ -4,6 +4,7 @@ import { GlobeIcon } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Attachment,
   AttachmentPreview,
@@ -41,7 +42,9 @@ import {
   PromptInputTools,
   usePromptInputAttachments,
 } from "@/components/ai-elements/prompt-input";
+import { SourceSelector, type SourceType } from "@/components/chat";
 import { SuggestionChips } from "@/components/suggestion-chips";
+import { authClient, signInGoogle } from "@/lib/auth/client";
 
 const PromptInputAttachmentsDisplay = () => {
   const attachments = usePromptInputAttachments();
@@ -73,9 +76,11 @@ const models = [
 
 export default function Home() {
   const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
   const [text, setText] = useState<string>("");
   const [model, setModel] = useState<string>(models[0].id);
   const [useWebSearch, setUseWebSearch] = useState<boolean>(false);
+  const [sourceTypes, setSourceTypes] = useState<SourceType[]>(["all"]);
 
   const handleSubmit = (message: PromptInputMessage) => {
     const hasText = Boolean(message.text);
@@ -85,11 +90,38 @@ export default function Home() {
       return;
     }
 
+    // Check authentication
+    if (isPending) {
+      // Still loading session, show loading toast
+      toast.loading("Checking authentication...", {
+        id: "auth-check",
+      });
+      return;
+    }
+
+    if (!session?.user) {
+      // User is not authenticated, show toast with login action
+      toast.error("Please sign in to send messages", {
+        id: "auth-required",
+        action: {
+          label: "Sign in with Google",
+          onClick: () => {
+            toast.dismiss("auth-required");
+            signInGoogle();
+          },
+        },
+      });
+      return;
+    }
+
     // Generate a new conversation ID (UUID)
     // Backend will handle database persistence when processing the message
     const conversationId = nanoid();
     const params = new URLSearchParams();
     if (message.text) params.set("q", message.text);
+    if (sourceTypes.length > 0 && !sourceTypes.includes("all")) {
+      params.set("sources", sourceTypes.join(","));
+    }
     router.push(`/${conversationId}?${params.toString()}`);
   };
 
@@ -161,6 +193,10 @@ export default function Home() {
                   <PromptInputActionAddAttachments />
                 </PromptInputActionMenuContent>
               </PromptInputActionMenu>
+              <SourceSelector
+                onChange={setSourceTypes}
+                selectedSources={sourceTypes}
+              />
               <PromptInputButton
                 onClick={() => setUseWebSearch(!useWebSearch)}
                 tooltip={{ content: "Search the web", shortcut: "⌘K" }}
@@ -171,22 +207,22 @@ export default function Home() {
                 <span>Deep Research</span>
               </PromptInputButton>
               {/* <PromptInputSelect
-                onValueChange={(value) => {
-                  setModel(value);
-                }}
-                value={model}
-              >
-                <PromptInputSelectTrigger>
-                  <PromptInputSelectValue />
-                </PromptInputSelectTrigger>
-                <PromptInputSelectContent>
-                  {models.map((model) => (
-                    <PromptInputSelectItem key={model.id} value={model.id}>
-                      {model.name}
-                    </PromptInputSelectItem>
-                  ))}
-                </PromptInputSelectContent>
-              </PromptInputSelect> */}
+               onValueChange={(value) => {
+                 setModel(value);
+               }}
+               value={model}
+             >
+               <PromptInputSelectTrigger>
+                 <PromptInputSelectValue />
+               </PromptInputSelectTrigger>
+               <PromptInputSelectContent>
+                 {models.map((model) => (
+                   <PromptInputSelectItem key={model.id} value={model.id}>
+                     {model.name}
+                   </PromptInputSelectItem>
+                 ))}
+               </PromptInputSelectContent>
+             </PromptInputSelect> */}
             </PromptInputTools>
             <PromptInputSubmit disabled={!text} />
           </PromptInputFooter>

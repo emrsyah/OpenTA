@@ -1,12 +1,11 @@
 "use client";
 
-import type { ComponentProps } from "react";
-
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { ArrowDownIcon, DownloadIcon } from "lucide-react";
+import type { ComponentProps } from "react";
 import { useCallback } from "react";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export type ConversationProps = ComponentProps<typeof StickToBottom>;
 
@@ -22,14 +21,18 @@ export const Conversation = ({ className, ...props }: ConversationProps) => (
 
 export type ConversationContentProps = ComponentProps<
   typeof StickToBottom.Content
->;
+> & {
+  scrollClassName?: string;
+};
 
 export const ConversationContent = ({
   className,
+  scrollClassName,
   ...props
 }: ConversationContentProps) => (
   <StickToBottom.Content
     className={cn("flex flex-col gap-8 p-4", className)}
+    scrollClassName={scrollClassName}
     {...props}
   />
 );

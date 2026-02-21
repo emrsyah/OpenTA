@@ -24,7 +24,11 @@ import {
   PromptInputTextarea,
   PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
-import { MessageEntry, PromptInputAttachmentsDisplay } from "@/components/chat";
+import {
+  MessageEntry,
+  PromptInputAttachmentsDisplay,
+  SourceSelector,
+} from "@/components/chat";
 import { ChatProvider, useChatContext } from "./chat-provider";
 
 // ─── Chat.Frame ───────────────────────────────────────────────────────────────
@@ -69,7 +73,7 @@ export function ChatConversationArea() {
 
   return (
     <Conversation className="flex-1 overflow-hidden">
-      <ConversationContent>
+      <ConversationContent scrollClassName="custom-scrollbar">
         {isLoadingHistory ? (
           <ChatLoadingState />
         ) : messages.length === 0 ? (
@@ -115,8 +119,8 @@ export function ChatWebSearchToggle() {
 
 export function ChatInputArea() {
   const { state, actions } = useChatContext();
-  const { status } = state;
-  const { sendMessage } = actions;
+  const { status, sourceTypes } = state;
+  const { sendMessage, setSourceTypes } = actions;
 
   const handleSubmit = (message: any) => {
     if (!message.text && !message.files?.length) return;
@@ -145,6 +149,10 @@ export function ChatInputArea() {
                 <PromptInputActionAddAttachments />
               </PromptInputActionMenuContent>
             </PromptInputActionMenu>
+            <SourceSelector
+              onChange={setSourceTypes}
+              selectedSources={sourceTypes}
+            />
             <ChatWebSearchToggle />
           </PromptInputTools>
           <PromptInputSubmit

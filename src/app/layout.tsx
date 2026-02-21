@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geistSans = Geist({
@@ -101,6 +102,7 @@ export default function RootLayout({
             <SidebarInset>{children}</SidebarInset>
           </SidebarProvider>
         </TooltipProvider>
+        <Toaster />
       </body>
     </html>
   );

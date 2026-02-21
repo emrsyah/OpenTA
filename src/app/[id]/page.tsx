@@ -8,6 +8,7 @@ import {
   ChatFrame,
   ChatInputArea,
   ChatProvider,
+  type SourceType,
 } from "@/components/chat";
 
 export async function generateMetadata({
@@ -29,15 +30,30 @@ export default async function ChatPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; sources?: string }>;
 }) {
   const { id } = await params;
-  const { q } = await searchParams;
+  const { q, sources } = await searchParams;
 
-  console.log("[ChatPage] Received params:", { id, q });
+  // Parse source types from URL parameter
+  const initialSourceTypes: SourceType[] = sources
+    ? (sources.split(",") as SourceType[])
+    : ["all"];
+
+  console.log("[ChatPage] Received params:", {
+    id,
+    q,
+    sources,
+    initialSourceTypes,
+  });
 
   return (
-    <ChatProvider conversationId={id} initialWebSearch={false} initialQuery={q}>
+    <ChatProvider
+      conversationId={id}
+      initialWebSearch={false}
+      initialQuery={q}
+      initialSourceTypes={initialSourceTypes}
+    >
       <ChatFrame>
         <ChatConversationArea />
         <ChatInputArea />

@@ -68,14 +68,11 @@ export function AppSidebar() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const isAuthenticated = !isPending && session?.user;
-  const { conversations, removeConversation, refresh } = useConversations();
+  const { conversations, removeConversation, refresh, addOptimisticConversation } = useConversations();
 
   // Handle creating a new conversation
   const handleNewChat = () => {
-    // Generate a UUID for the new conversation
-    // Backend will create the DB row when first message is sent
-    const conversationId = nanoid();
-    router.push(`/${conversationId}`);
+    router.push(`/`);
   };
 
   // Handle deleting a conversation
@@ -116,7 +113,7 @@ export function AppSidebar() {
             className="h-6 w-6"
           />
           <div>
-            <h2 className="font-semibold text-sm">Open TA</h2>
+            <h2 className="font-semibold text-sm">OpenTA</h2>
             <p className="text-xs text-muted-foreground">Research Directory</p>
           </div>
         </div>
@@ -174,7 +171,7 @@ export function AppSidebar() {
                           <MessageSquare className="h-4 w-4" />
                           {conversation.title === null ? (
                             // Skeleton loading state
-                            <div className="flex-1 h-4 bg-muted animate-pulse rounded" />
+                            <div className="flex-1 h-4 bg-muted animate-pulse" />
                           ) : (
                             <span className="truncate flex-1">
                               {conversation.title}
