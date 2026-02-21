@@ -275,13 +275,15 @@ export function useStreamingChat(options?: UseStreamingChatOptions) {
                   updateAssistant((msg) => ({
                     ...msg,
                     classifyStatus: event.step,
-                    isThinking: false, // Stop thinking when we have status
+                    // Keep thinking true until acknowledgment or plan arrives
+                    // This prevents the empty gap during acknowledgment generation
                   }));
                   break;
 
                 case "acknowledgment":
                   updateAssistant((msg) => ({
                     ...msg,
+                    isThinking: false, // Stop thinking when acknowledgment arrives
                     acknowledgment: event.content,
                   }));
                   break;
@@ -345,7 +347,11 @@ export function useStreamingChat(options?: UseStreamingChatOptions) {
                   break;
 
                 case "answer_start":
-                  updateAssistant((msg) => ({ ...msg, answerStarted: true }));
+                  updateAssistant((msg) => ({
+                    ...msg,
+                    answerStarted: true,
+                    isThinking: false, // Ensure thinking stops when answer starts
+                  }));
                   break;
 
                 case "text":

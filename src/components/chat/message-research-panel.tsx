@@ -44,6 +44,7 @@ export function MessageResearchPanel({
     planSteps,
     answerStarted,
     isThinking,
+    acknowledgment,
   } = message;
   const [open, setOpen] = useState(true);
 
@@ -53,8 +54,10 @@ export function MessageResearchPanel({
     }
   }, [answerStarted]);
 
-  // Show shimmer during thinking state (before classification/planning)
-  if (isThinking) {
+  // Show shimmer during thinking state
+  // Keep shimmering until acknowledgment OR plan arrives (prevents empty gap)
+  // Don't show shimmer if acknowledgment already exists
+  if (isThinking && !acknowledgment) {
     return <MessageThinking message="OpenTA is thinking..." />;
   }
 

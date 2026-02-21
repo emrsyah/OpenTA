@@ -133,14 +133,15 @@ export function MessageEntry({ message, isStreaming }: MessageEntryProps) {
   return (
     <Message from={message.role}>
       <MessageContent>
-        {message.role === "assistant" && (
-          <MessageResearchPanel isStreaming={isStreaming} message={message} />
-        )}
-        {/* Show acknowledgment separately from research panel */}
-        {message.role === "assistant" && message.acknowledgment && !message.planSteps?.length && (
-          <div className="mb-3 text-muted-foreground text-sm leading-relaxed">
+        {/* Render acknowledgment FIRST (before research panel) */}
+        {/* This ensures correct DOM order: shimmer → acknowledgment → task panel → answer */}
+        {message.role === "assistant" && message.acknowledgment && (
+          <div className="mb-3 text-foreground text-sm leading-relaxed">
             {message.acknowledgment}
           </div>
+        )}
+        {message.role === "assistant" && (
+          <MessageResearchPanel isStreaming={isStreaming} message={message} />
         )}
         {message.parts.map((part, i) => {
           if (part.type !== "text") {
