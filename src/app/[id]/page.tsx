@@ -13,13 +13,20 @@ import {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ q?: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
+  const { q } = await searchParams;
+
+  const title = q || `Chat ${id}`;
 
   return {
-    title: `Chat ${id} - Open TA Tel-U`,
+    title: {
+      absolute: `${title} - OpenTa`,
+    },
     description:
       "AI-powered research assistant for Telkom University alumni papers",
   };
