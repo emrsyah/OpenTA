@@ -131,20 +131,38 @@ export async function POST(req: NextRequest) {
                 continue;
               }
 
-              try {
-                const parsed = JSON.parse(data);
+               try {
+                 const parsed = JSON.parse(data);
 
-                if (parsed.type === "status") {
-                  controller.enqueue(
-                    encoder.encode(
-                      JSON.stringify({
-                        type: "status",
-                        step: parsed.step,
-                        message: parsed.message,
-                      }) + "\n",
-                    ),
-                  );
-                } else if (parsed.type === "plan") {
+                 if (parsed.type === "simple_thinking") {
+                   controller.enqueue(
+                     encoder.encode(
+                       JSON.stringify({
+                         type: "simple_thinking",
+                         message: parsed.message,
+                       }) + "\n",
+                     ),
+                   );
+                 } else if (parsed.type === "acknowledgment") {
+                   controller.enqueue(
+                     encoder.encode(
+                       JSON.stringify({
+                         type: "acknowledgment",
+                         content: parsed.content,
+                       }) + "\n",
+                     ),
+                   );
+                 } else if (parsed.type === "status") {
+                   controller.enqueue(
+                     encoder.encode(
+                       JSON.stringify({
+                         type: "status",
+                         step: parsed.step,
+                         message: parsed.message,
+                       }) + "\n",
+                     ),
+                   );
+                 } else if (parsed.type === "plan") {
                   controller.enqueue(
                     encoder.encode(
                       JSON.stringify({ type: "plan", steps: parsed.steps }) +

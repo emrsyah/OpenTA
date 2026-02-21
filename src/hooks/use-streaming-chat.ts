@@ -40,6 +40,8 @@ export interface ChatMessage {
   classifyStatus?: string;
   planSteps?: PlanStep[];
   answerStarted?: boolean;
+  isThinking?: boolean;
+  acknowledgment?: string;
 }
 
 interface SendMessageOptions {
@@ -189,6 +191,7 @@ export function useStreamingChat(options?: UseStreamingChatOptions) {
         role: "assistant",
         content: "",
         parts: [{ type: "text", text: "" }],
+        isThinking: true,
       };
 
       setMessages((prev) => [...prev, userMessage, assistantMessage]);
@@ -261,16 +264,32 @@ export function useStreamingChat(options?: UseStreamingChatOptions) {
               const event = JSON.parse(trimmed);
 
               switch (event.type) {
+                case "simple_thinking":
+                  updateAssistant((msg) => ({
+                    ...msg,
+                    isThinking: true,
+                  }));
+                  break;
+
                 case "status":
                   updateAssistant((msg) => ({
                     ...msg,
                     classifyStatus: event.step,
+                    isThinking: false, // Stop thinking when we have status
+                  }));
+                  break;
+
+                case "acknowledgment":
+                  updateAssistant((msg) => ({
+                    ...msg,
+                    acknowledgment: event.content,
                   }));
                   break;
 
                 case "plan":
                   updateAssistant((msg) => ({
                     ...msg,
+                    isThinking: false, // Stop thinking when plan starts
                     planSteps: (
                       event.steps as Array<{
                         id: number;

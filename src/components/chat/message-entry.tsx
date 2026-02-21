@@ -136,6 +136,12 @@ export function MessageEntry({ message, isStreaming }: MessageEntryProps) {
         {message.role === "assistant" && (
           <MessageResearchPanel isStreaming={isStreaming} message={message} />
         )}
+        {/* Show acknowledgment separately from research panel */}
+        {message.role === "assistant" && message.acknowledgment && !message.planSteps?.length && (
+          <div className="mb-3 text-muted-foreground text-sm leading-relaxed">
+            {message.acknowledgment}
+          </div>
+        )}
         {message.parts.map((part, i) => {
           if (part.type !== "text") {
             return null;

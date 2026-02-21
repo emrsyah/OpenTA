@@ -9,6 +9,7 @@ import {
   TaskTrigger,
 } from "@/components/ai-elements/task";
 import type { ChatMessage, PlanStep } from "@/hooks/use-streaming-chat";
+import { MessageThinking } from "./message-thinking";
 
 interface MessageResearchPanelProps {
   message: ChatMessage;
@@ -38,7 +39,12 @@ export function MessageResearchPanel({
   message,
   isStreaming,
 }: MessageResearchPanelProps) {
-  const { classifyStatus, planSteps, answerStarted } = message;
+  const {
+    classifyStatus,
+    planSteps,
+    answerStarted,
+    isThinking,
+  } = message;
   const [open, setOpen] = useState(true);
 
   useEffect(() => {
@@ -47,20 +53,25 @@ export function MessageResearchPanel({
     }
   }, [answerStarted]);
 
-  const hasContent = classifyStatus || planSteps?.length;
-  if (!hasContent) {
+  // Show shimmer during thinking state (before classification/planning)
+  if (isThinking) {
+    return <MessageThinking message="OpenTA is thinking..." />;
+  }
+
+  // Only show Task panel if we have actual plan steps
+  const hasPlanSteps = planSteps && planSteps.length > 0;
+  if (!hasPlanSteps) {
     return null;
   }
 
   const isPlanRunning = isStreaming && !answerStarted;
   const stepCount = planSteps?.length ?? 0;
-  const doneCount = planSteps?.filter((s) => s.status === "done").length ?? 0;
+  const doneCount =
+    planSteps?.filter((s) => s.status === "done").length ?? 0;
   const allDone = doneCount === stepCount && stepCount > 0;
 
   const label = isPlanRunning
-    ? planSteps
-      ? `Researching… ${doneCount}/${stepCount} steps`
-      : "Planning research…"
+    ? `Researching… ${doneCount}/${stepCount} steps`
     : allDone
       ? `Research complete · ${stepCount} steps`
       : "Research";
@@ -81,18 +92,6 @@ export function MessageResearchPanel({
         </div>
       </TaskTrigger>
       <TaskContent>
-        {/* Pre-plan status */}
-        {!planSteps && classifyStatus && (
-          <TaskItem className="flex items-center gap-2">
-            <Loader2Icon className="size-3 animate-spin shrink-0" />
-            {classifyStatus === "classifying"
-              ? "Classifying request…"
-              : classifyStatus === "classified"
-                ? "Request classified"
-                : "Planning research…"}
-          </TaskItem>
-        )}
-
         {/* Per-step tasks */}
         {planSteps?.map((step) => (
           <Task
