@@ -175,6 +175,7 @@ export function MessageEntry({ message, isStreaming }: MessageEntryProps) {
                   : `${message.id}-${i}`
               }
               components={citationComponents}
+              refinementState={message.refinementState}
             >
               {part.text}
             </MessageResponse>
