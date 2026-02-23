@@ -11,8 +11,8 @@
 !.yarn/versions
 
 # sysyphus
-/.sysyphus
-/.sysyphus/
+/.sisyphus
+/.sisyphus/
 
 # testing
 /coverage
