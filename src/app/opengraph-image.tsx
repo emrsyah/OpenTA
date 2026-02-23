@@ -14,8 +14,21 @@ export const contentType = "image/png";
 
 // Image generation
 export default async function Image() {
-  const logoUrl = "/favicon/android-chrome-512x512.png";
+  // In Edge Runtime, fetch the logo and convert to base64 data URI
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+  let logoSrc: string | null = null;
+  try {
+    const logoResponse = await fetch(
+      new URL("/favicon/android-chrome-512x512.png", baseUrl).toString(),
+    );
+    const logoBuffer = await logoResponse.arrayBuffer();
+    const logoBase64 = Buffer.from(logoBuffer).toString("base64");
+    logoSrc = `data:image/png;base64,${logoBase64}`;
+  } catch (error) {
+    // Fallback: no logo if fetch fails
+    console.error("Failed to fetch logo:", error);
+  }
   return new ImageResponse(
     // ImageResponse JSX element
     <div
@@ -51,26 +64,27 @@ export default async function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: "32px",
+          gap: logoSrc ? "32px" : "48px",
           position: "relative",
           zIndex: 1,
         }}
       >
-        {/* Logo */}
-        {/* biome-ignore lint/performance/noImgElement: ImageResponse requires standard img tag */}
-        <img
-          src={logoUrl}
-          alt="Open TA Logo"
-          width={180}
-          height={180}
-          style={{
-            borderRadius: "48px",
-            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
-            background: "white",
-            padding: "20px",
-          }}
-        />
-
+        {/* Logo - only show if we successfully loaded it */}
+        {logoSrc && (
+          /* biome-ignore lint/performance/noImgElement: ImageResponse requires standard img tag */
+          <img
+            src={logoSrc}
+            alt="Open TA Logo"
+            width={180}
+            height={180}
+            style={{
+              borderRadius: "48px",
+              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+              background: "white",
+              padding: "20px",
+            }}
+          />
+        )}
         <div
           style={{
             display: "flex",
