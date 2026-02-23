@@ -10,6 +10,10 @@
 !.yarn/releases
 !.yarn/versions
 
+# sysyphus
+/.sisyphus
+/.sisyphus/
+
 # testing
 /coverage
 
@@ -31,7 +35,8 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
+.env.local
+.env
 
 # vercel
 .vercel

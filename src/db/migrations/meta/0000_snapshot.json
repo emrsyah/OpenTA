@@ -1,0 +1,177 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.catalog": {
+      "name": "catalog",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "catalog_number": {
+          "name": "catalog_number",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "catalog_type": {
+          "name": "catalog_type",
+          "type": "catalog_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "classification_number": {
+          "name": "classification_number",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subject": {
+          "name": "subject",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "author": {
+          "name": "author",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "editor": {
+          "name": "editor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "publisher": {
+          "name": "publisher",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "shelf_number": {
+          "name": "shelf_number",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "library_location": {
+          "name": "library_location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "publication_year": {
+          "name": "publication_year",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_copies": {
+          "name": "total_copies",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "access_link": {
+          "name": "access_link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "catalog_publication_year_idx": {
+          "name": "catalog_publication_year_idx",
+          "columns": [
+            {
+              "expression": "publication_year",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "int2_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.catalog_type": {
+      "name": "catalog_type",
+      "values": [
+        "Artikel - Restricted Use",
+        "Bahan Ajar",
+        "Buku - Circulation (BI Corner)",
+        "Buku - Circulation (Dapat Dipinjam)",
+        "Buku - Elektronik (E-Book)",
+        "Buku - Elektronik (E-Book) Kindle",
+        "Buku - Elektronik (E-Book) Restricted",
+        "Buku - Elektronik (E-Book) Tel-U Press",
+        "Buku - LAC",
+        "Buku - Reference (Hanya Baca di Tempat)",
+        "Buku Rekreatif - Circulation",
+        "Buku Softskill - Circulation",
+        "Case Studies",
+        "Disertasi - Reference",
+        "E-Article",
+        "Institutional Content",
+        "Jurnal Internasional - Reference",
+        "Jurnal Nasional - Reference",
+        "Jurnal Terakreditasi DIKTI - Reference",
+        "Karya Ilmiah - Disertasi (S3) - Reference",
+        "Karya Ilmiah - Skripsi (S1) - Reference",
+        "Karya Ilmiah - TA (D3) - Reference",
+        "Karya Ilmiah - Thesis (S2) - Reference",
+        "Majalah - Reference",
+        "Majalah Bundling",
+        "Majalah Ilmiah - Reference",
+        "Majalah Populer - Reference",
+        "Modul Praktikum ( Electronic )",
+        "Proceeding ( Electronic )",
+        "e - Article Journal",
+        "ePoster",
+        "skripsi"
+      ],
+      "schema": "public"
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {}
+  }
+}
