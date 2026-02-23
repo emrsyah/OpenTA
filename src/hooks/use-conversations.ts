@@ -11,6 +11,7 @@ export interface Conversation {
 }
 
 let globalConversations: Conversation[] = [];
+let initialLoading = true;
 const listeners: Set<() => void> = new Set();
 
 /**
@@ -39,6 +40,7 @@ export function useConversations() {
   useEffect(() => {
     if (!isAuthenticated) {
       globalConversations = [];
+      initialLoading = false;
       notifyListeners();
       return;
     }
@@ -89,6 +91,9 @@ export function useConversations() {
         }
       } catch (error) {
         console.error("Failed to fetch conversations:", error);
+      } finally {
+        initialLoading = false;
+        notifyListeners();
       }
     };
 
@@ -97,6 +102,7 @@ export function useConversations() {
 
   return {
     conversations: globalConversations,
+    isLoading: initialLoading && isAuthenticated,
     addOptimisticConversation: (id: string) => {
       // Check if already exists to avoid duplicates
       if (globalConversations.find((c) => c.id === id)) {

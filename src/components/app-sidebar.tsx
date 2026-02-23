@@ -61,18 +61,18 @@ const items = [
     icon: BookOpen,
     description: "Explore alumni research",
   },
-  {
-    title: "Workspace",
-    url: "/workspace",
-    icon: Folder,
-    description: "Manage your research",
-  },
-  {
-    title: "Saved Papers",
-    url: "/saved",
-    icon: Bookmark,
-    description: "Your bookmarked research",
-  },
+  // {
+  //   title: "Workspace",
+  //   url: "/workspace",
+  //   icon: Folder,
+  //   description: "Manage your research",
+  // },
+  // {
+  //   title: "Saved Papers",
+  //   url: "/saved",
+  //   icon: Bookmark,
+  //   description: "Your bookmarked research",
+  // },
 ];
 
 export function AppSidebar() {
@@ -82,6 +82,7 @@ export function AppSidebar() {
   const isAuthenticated = !isPending && session?.user;
   const {
     conversations,
+    isLoading: isLoadingConversations,
     removeConversation,
     refresh,
     addOptimisticConversation,
@@ -193,7 +194,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {isAuthenticated && (
+        {(isPending || isAuthenticated) && (
           <SidebarGroup className="flex flex-col overflow-hidden">
             <SidebarGroupLabel className="flex items-center justify-between shrink-0">
               Recent Chats
@@ -202,15 +203,23 @@ export function AppSidebar() {
                 size="sm"
                 className="h-6 px-2 text-xs"
                 onClick={handleNewChat}
+                disabled={isPending}
               >
                 <Plus className="h-3 w-3 mr-1" />
                 New
               </Button>
             </SidebarGroupLabel>
             <SidebarGroupContent className="relative flex-1 min-h-0 overflow-hidden">
-              {/* Scroll indicator - top shadow when scrolled */}
-
-              {conversations.length === 0 ? (
+              {isPending || isLoadingConversations ? (
+                <div className="space-y-2 px-3 py-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="h-4 w-4 shrink-0 rounded bg-muted animate-pulse" />
+                      <div className="h-4 flex-1 bg-muted animate-pulse rounded" />
+                    </div>
+                  ))}
+                </div>
+              ) : conversations.length === 0 ? (
                 <div className="text-center py-4">
                   <p className="text-xs text-muted-foreground">No chats yet</p>
                 </div>
@@ -259,7 +268,12 @@ export function AppSidebar() {
 
       </SidebarContent>
       <SidebarFooter className="border-t p-4 hover-scrollbar">
-        {isAuthenticated ? (
+        {isPending ? (
+          <div className="flex flex-col gap-2">
+            <div className="h-9 w-full bg-muted animate-pulse rounded-md" />
+            <div className="h-3 w-3/4 bg-muted animate-pulse rounded mx-auto mt-1" />
+          </div>
+        ) : isAuthenticated ? (
           <div className="flex flex-col gap-2">
             <UserMenu />
             <Separator className="my-1" />
