@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || "https://open-ta-telyu.vercel.app";
+    process.env.NEXT_PUBLIC_APP_URL || "https://openta.vercel.app";
 
   return [
     {
