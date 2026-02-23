@@ -1,4 +1,7 @@
-# Open TA Tel-U
+<img width="938" height="391" alt="image" src="https://github.com/user-attachments/assets/1b93ab1e-6ec1-45d0-a41e-ed513e4b82b4" />
+
+
+# OpenTA - AI-Powered Co-Researcher for Telkom University
 
 <div align="center">
 
@@ -8,8 +11,6 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-4169E1?style=flat-square&logo=postgresql)
 ![DSPy](https://img.shields.io/badge/DSPy-Framework-orange?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
-
-**AI-Powered Co-Researcher for Telkom University**
 
 An agent-native research workspace that helps you discover, analyze, and synthesize academic papers from Telkom University alumni.
 
@@ -21,7 +22,7 @@ An agent-native research workspace that helps you discover, analyze, and synthes
 
 ## 📖 Overview
 
-Open TA Tel-U is an **AI-powered co-researcher** designed to accelerate academic research. Unlike traditional paper repositories, this is an **agent-native workspace** where AI agents actively help you:
+OpenTA is an **AI-powered co-researcher** designed to accelerate academic research. Unlike traditional paper repositories, this is an **agent-native workspace** where AI agents actively help you:
 
 - 🔍 **Discover** relevant papers from Telkom University's vast research database
 - 🧠 **Synthesize** knowledge across multiple papers and sources
