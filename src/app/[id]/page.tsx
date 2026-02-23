@@ -60,24 +60,19 @@ export default async function ChatPage({
     ? (sources.split(",") as SourceType[])
     : ["all"];
 
-  console.log("[ChatPage] Received params:", {
-    id,
-    q,
-    sources,
-    initialSourceTypes,
-  });
-
   return (
-    <ChatProvider
-      conversationId={id}
-      initialWebSearch={false}
-      initialQuery={q}
-      initialSourceTypes={initialSourceTypes}
-    >
-      <ChatFrame>
-        <ChatConversationArea />
-        <ChatInputArea />
-      </ChatFrame>
-    </ChatProvider>
+    <div className="px-4">
+      <ChatProvider
+        conversationId={id}
+        initialWebSearch={false}
+        initialQuery={q}
+        initialSourceTypes={initialSourceTypes}
+      >
+        <ChatFrame>
+          <ChatConversationArea />
+          <ChatInputArea />
+        </ChatFrame>
+      </ChatProvider>
+    </div>
   );
 }

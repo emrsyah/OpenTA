@@ -20,6 +20,19 @@ export interface Source {
   citation_number: number;
 }
 
+export interface CitationAuditResult {
+  isClean: boolean;
+  hallucinatedNumbers: number[];
+}
+
+export interface ReformulatedQuery {
+  original: string;
+  query: string;
+  paperCount: number;
+}
+
+export type RefinementState = 'idle' | 'starting' | 'searching' | 'streaming' | 'done';
+
 export interface PlanStep {
   id: number;
   title: string;
@@ -29,6 +42,7 @@ export interface PlanStep {
   thinking: string;
   searchQuery?: string;
   paperCount?: number;
+  reformulatedQuery?: ReformulatedQuery;
 }
 
 export interface ChatMessage {
@@ -42,6 +56,8 @@ export interface ChatMessage {
   answerStarted?: boolean;
   isThinking?: boolean;
   acknowledgment?: string;
+  citationAudit?: CitationAuditResult;
+  refinementState?: RefinementState;
 }
 
 interface SendMessageOptions {

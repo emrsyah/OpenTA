@@ -149,7 +149,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)]">
+    <div className="flex md:mx-4 flex-col h-[calc(100vh-2rem)]">
       <Conversation className="flex-1 overflow-hidden">
         <ConversationContent>
           <div className="flex flex-col items-center justify-center h-full px-4 animate-in mt-16 fade-in slide-in-from-bottom-4 duration-1000">

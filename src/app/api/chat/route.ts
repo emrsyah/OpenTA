@@ -187,7 +187,13 @@ export async function POST(req: NextRequest) {
                         type: "step_action",
                         step_id: parsed.step_id,
                         action: parsed.action,
-                        query: parsed.query,
+                        ...(parsed.action === "reformulated_query" ? {
+                          original_query: parsed.original_query,
+                          query: parsed.query,
+                          paper_count: parsed.paper_count,
+                        } : {
+                          query: parsed.query,
+                        }),
                       }) + "\n",
                     ),
                   );
@@ -286,6 +292,55 @@ export async function POST(req: NextRequest) {
                       JSON.stringify({
                         type: "title",
                         content: parsed.content,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "citation_audit") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "citation_audit",
+                        is_clean: parsed.is_clean,
+                        hallucinated_citation_numbers: parsed.hallucinated_citation_numbers,
+                        total_citations_in_answer: parsed.total_citations_in_answer,
+                        total_papers_available: parsed.total_papers_available,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "refinement_start") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "refinement_start",
+                        gap_query: parsed.gap_query,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "refinement_search") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "refinement_search",
+                        paper_count: parsed.paper_count,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "refinement_token") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "refinement_token",
+                        content: parsed.content,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "refinement_done") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "refinement_done",
+                        content: parsed.content,
+                        sources: parsed.sources,
                       }) + "\n",
                     ),
                   );
