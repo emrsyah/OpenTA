@@ -1,6 +1,7 @@
 "use client";
 
 import type { UIMessage } from "ai";
+import type { RefinementState } from "@/hooks/use-streaming-chat";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from "react";
 import { Streamdown } from "streamdown";
 
@@ -317,22 +319,43 @@ export const MessageBranchPage = ({
   );
 };
 
-export type MessageResponseProps = ComponentProps<typeof Streamdown>;
+export type MessageResponseProps = ComponentProps<typeof Streamdown> & {
+  refinementState?: RefinementState;
+};
 
 const streamdownPlugins = { cjk, code, math, mermaid };
-
 export const MessageResponse = memo(
-  ({ className, ...props }: MessageResponseProps) => (
-    <Streamdown
-      className={cn(
-        "markdown-content size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-        className,
-      )}
-      plugins={streamdownPlugins}
-      {...props}
-    />
-  ),
-  (prevProps, nextProps) => prevProps.children === nextProps.children,
+  ({ className, refinementState, ...props }: MessageResponseProps) => {
+    const [shouldAnimate, setShouldAnimate] = useState(false);
+    const prevStateRef = useRef<RefinementState | undefined>(refinementState);
+
+    // Detect when refinement completes (transitions to 'done')
+    useEffect(() => {
+      if (
+        refinementState === "done" &&
+        prevStateRef.current !== "done" &&
+        prevStateRef.current !== undefined
+      ) {
+        setShouldAnimate(true);
+      }
+      prevStateRef.current = refinementState;
+    }, [refinementState]);
+
+    return (
+      <Streamdown
+        className={cn(
+          "markdown-content size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+          shouldAnimate && "refinement-fade-in",
+          className,
+        )}
+        plugins={streamdownPlugins}
+        {...props}
+      />
+    );
+  },
+  (prevProps, nextProps) =>
+    prevProps.children === nextProps.children &&
+    prevProps.refinementState === nextProps.refinementState,
 );
 
 MessageResponse.displayName = "MessageResponse";
