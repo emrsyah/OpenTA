@@ -30,110 +30,36 @@ export default async function Image() {
     console.error("Failed to fetch logo:", error);
   }
   return new ImageResponse(
-    // ImageResponse JSX element
-    <div
-      style={{
-        fontSize: 128,
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily:
-          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        position: "relative",
-      }}
-    >
-      {/* Background pattern */}
-      <div
+    logoSrc ? (
+      /* biome-ignore lint/performance/noImgElement: ImageResponse requires standard img tag */
+      <img
+        src={logoSrc}
+        alt="Open TA Logo"
+        width={size.width}
+        height={size.height}
         style={{
-          position: "absolute",
-          inset: 0,
-          opacity: 0.1,
-          backgroundImage:
-            "radial-gradient(circle at 25% 25%, white 2px, transparent 2px), radial-gradient(circle at 75% 75%, white 2px, transparent 2px)",
-          backgroundSize: "60px 60px",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
         }}
       />
-
+    ) : (
+      // Fallback if logo fails to load
       <div
         style={{
+          width: "100%",
+          height: "100%",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: logoSrc ? "32px" : "48px",
-          position: "relative",
-          zIndex: 1,
+          fontSize: 48,
+          fontWeight: 700,
+          color: "#1a1a1a",
         }}
       >
-        {/* Logo - only show if we successfully loaded it */}
-        {logoSrc && (
-          /* biome-ignore lint/performance/noImgElement: ImageResponse requires standard img tag */
-          <img
-            src={logoSrc}
-            alt="Open TA Logo"
-            width={180}
-            height={180}
-            style={{
-              borderRadius: "48px",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
-              background: "white",
-              padding: "20px",
-            }}
-          />
-        )}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "16px",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 72,
-              fontWeight: 900,
-              letterSpacing: "-0.04em",
-              color: "white",
-              textShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
-              textAlign: "center",
-            }}
-          >
-            Open TA Telyu
-          </div>
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 500,
-              color: "rgba(255, 255, 255, 0.95)",
-              textShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
-              textAlign: "center",
-              letterSpacing: "0.02em",
-            }}
-          >
-            Telkom University Alumni Research Repository
-          </div>
-        </div>
+        Open TA
       </div>
-
-      {/* Bottom accent */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: "8px",
-          background:
-            "linear-gradient(90deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%)",
-        }}
-      />
-    </div>,
+    ),
     // ImageResponse options
     {
       // For convenience, we can re-use the exported opengraph-image
