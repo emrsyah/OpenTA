@@ -15,6 +15,7 @@ const envSchema = z.object({
 
   // Client-side variables
   NEXT_PUBLIC_APP_URL: z.string().url(),
+  NEXT_PUBLIC_BACKEND_URL: z.string().url().optional().default("http://localhost:8000"),
 });
 
 // Validate environment variables

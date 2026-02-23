@@ -1,0 +1,51 @@
+# Render.com Blueprint Configuration for OpenTA Frontend
+# This configuration is intended for the development branch deployment
+
+services:
+  - type: web
+    name: openta-frontend-dev
+    runtime: node
+    plan: free # Options: free, starter, standard, pro
+    region: singapore # Options: oregon, frankfurt, singapore, sydney
+    
+    # Build and Start commands
+    # Using bun as bun.lock is present, fallback to npm if needed
+    buildCommand: bun install && bun run build
+    startCommand: bun run start
+
+    # Use the dev branch for this Render deployment
+    branch: dev
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # Application URL (Update this in Render dashboard once the service is created)
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://openta-frontend-dev.onrender.com
+      
+      - key: BETTER_AUTH_URL
+        value: https://openta-frontend-dev.onrender.com
+
+      # Backend Integration
+      # Use the deployed backend URL
+      - key: NEXT_PUBLIC_BACKEND_URL
+        value: https://openta-backend.onrender.com
+
+      # Database - Shared with backend
+      - key: DATABASE_URL
+        sync: false # Set manually in Render dashboard from your Supabase instance
+
+      # Authentication - Better Auth
+      - key: BETTER_AUTH_SECRET
+        sync: false # Set manually in Render dashboard
+      
+      - key: GOOGLE_CLIENT_ID
+        sync: false # Set manually in Render dashboard
+      
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false # Set manually in Render dashboard
+
+      # Skip environment validation for build time
+      - key: SKIP_ENV_VALIDATION
+        value: "true"
