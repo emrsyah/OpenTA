@@ -143,17 +143,17 @@ export function ChatInputArea() {
         </PromptInputBody>
         <PromptInputFooter>
           <PromptInputTools>
-            <PromptInputActionMenu>
+            {/* <PromptInputActionMenu>
               <PromptInputActionMenuTrigger />
               <PromptInputActionMenuContent>
                 <PromptInputActionAddAttachments />
               </PromptInputActionMenuContent>
-            </PromptInputActionMenu>
-            <SourceSelector
+            </PromptInputActionMenu> */}
+            {/* <SourceSelector
               onChange={setSourceTypes}
               selectedSources={sourceTypes}
-            />
-            <ChatWebSearchToggle />
+            /> */}
+            {/* <ChatWebSearchToggle /> */}
           </PromptInputTools>
           <PromptInputSubmit
             disabled={status === "streaming"}

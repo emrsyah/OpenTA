@@ -207,13 +207,13 @@ export function HomePage() {
           </PromptInputBody>
           <PromptInputFooter>
             <PromptInputTools>
-              <PromptInputActionMenu>
+              {/* <PromptInputActionMenu>
                 <PromptInputActionMenuTrigger />
                 <PromptInputActionMenuContent>
                   <PromptInputActionAddAttachments />
                 </PromptInputActionMenuContent>
-              </PromptInputActionMenu>
-              <SourceSelector
+              </PromptInputActionMenu> */}
+              {/* <SourceSelector
                 onChange={setSourceTypes}
                 selectedSources={sourceTypes}
               />
@@ -225,7 +225,7 @@ export function HomePage() {
               >
                 <GlobeIcon size={16} />
                 <span>Deep Research</span>
-              </PromptInputButton>
+              </PromptInputButton> */}
               {/* <PromptInputSelect
                 onValueChange={(value) => {
                   setModel(value);
