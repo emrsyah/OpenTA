@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { generateBackendToken } from "@/lib/auth/backend-jwt";
 
+// Allow streaming responses up to 30 seconds
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
@@ -57,12 +59,19 @@ export async function POST(req: NextRequest) {
       req.headers.get("Accept-Language")?.split(",")[0] || "id-ID";
     const timezone = req.headers.get("X-Timezone") || "Asia/Jakarta";
     const sourcePreference = webSearch ? "all" : "only_papers";
+    // Generate JWT for backend authentication
+    const backendToken = await generateBackendToken({
+      id: session.user.id,
+      email: session.user.email,
+      name: session.user.name,
+    });
 
-    // Proxy the request to the backend agent with new API structure
+    // Proxy the request to the backend agent with JWT authentication
     const response = await fetch(`${backendUrl}/chat/basic`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${backendToken}`, // JWT for user verification
       },
       body: JSON.stringify({
         query,
@@ -75,6 +84,7 @@ export async function POST(req: NextRequest) {
           conversation_id: conversationId,
           is_incognito: false,
           attachments: [],
+          // Note: user_id is extracted from JWT by Python backend, not sent in body
         },
       }),
     });

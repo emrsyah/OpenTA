@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm";
+import { user } from "@/lib/auth/schema";
 import {
   boolean,
   index,
@@ -17,10 +18,12 @@ export const conversations = pgTable(
     id: varchar({ length: 128 }).primaryKey().notNull(),
     title: text(),
     isIncognito: boolean("is_incognito").default(false).notNull(),
+    userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
+    index("conversations_user_id_idx").using("btree", table.userId),
     index("conversations_created_at_idx").using(
       "btree",
       table.createdAt.asc().nullsLast(),
@@ -60,7 +63,11 @@ export const messages = pgTable(
 );
 
 // Relations
-export const conversationsRelations = relations(conversations, ({ many }) => ({
+export const conversationsRelations = relations(conversations, ({ one, many }) => ({
+  user: one(user, {
+    fields: [conversations.userId],
+    references: [user.id],
+  }),
   messages: many(messages),
 }));
 
