@@ -7,6 +7,7 @@ import {
 } from "@/components/ai-elements/message";
 import type {
   ChatMessage as ChatMessageType,
+  CitationAuditResult,
   Source,
 } from "@/hooks/use-streaming-chat";
 import { CitationHoverCard } from "./citation-hover-card";
@@ -25,6 +26,7 @@ interface MessageEntryProps {
 function processChildren(
   children: ReactNode,
   sourceMap: Map<number, Source>,
+  citationAudit?: CitationAuditResult,
 ): ReactNode {
   if (typeof children === "string") {
     // Process string for citations
@@ -45,10 +47,21 @@ function processChildren(
         .map((n) => sourceMap.get(n))
         .filter((s): s is Source => !!s);
 
-      // Add citation card if sources found
-      if (matched.length > 0) {
+      // Check if citation is invalid (hallucinated)
+      const isInvalid =
+        citationAudit &&
+        !citationAudit.isClean &&
+        citationAudit.hallucinatedNumbers.includes(nums[0]);
+
+      // Add citation card if sources found OR if citation is invalid
+      if (matched.length > 0 || isInvalid) {
         parts.push(
-          <CitationHoverCard key={match.index} nums={nums} sources={matched} />,
+          <CitationHoverCard
+            key={match.index}
+            nums={nums}
+            sources={matched}
+            citationAudit={citationAudit}
+          />,
         );
       } else {
         parts.push(match[0]);
@@ -68,7 +81,7 @@ function processChildren(
   if (Array.isArray(children)) {
     return children.map((child, i) => {
       if (typeof child === "string") {
-        const processed = processChildren(child, sourceMap);
+        const processed = processChildren(child, sourceMap, citationAudit);
         if (Array.isArray(processed)) {
           return processed.map((p, j) =>
             typeof p === "string" ? p : <span key={`${i}-${j}`}>{p}</span>,
@@ -88,7 +101,10 @@ function processChildren(
  * This is passed to MessageResponse component
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function makeCitationComponents(sourceMap: Map<number, Source>): any {
+function makeCitationComponents(
+  sourceMap: Map<number, Source>,
+  citationAudit?: CitationAuditResult,
+): any {
   return {
     p: ({
       children,
@@ -98,7 +114,9 @@ function makeCitationComponents(sourceMap: Map<number, Source>): any {
       children?: ReactNode;
       node?: unknown;
     } & Record<string, unknown>) => (
-      <p {...props}>{processChildren(children ?? null, sourceMap)}</p>
+      <p {...props}>
+        {processChildren(children ?? null, sourceMap, citationAudit)}
+      </p>
     ),
     li: ({
       children,
@@ -108,7 +126,9 @@ function makeCitationComponents(sourceMap: Map<number, Source>): any {
       children?: ReactNode;
       node?: unknown;
     } & Record<string, unknown>) => (
-      <li {...props}>{processChildren(children ?? null, sourceMap)}</li>
+      <li {...props}>
+        {processChildren(children ?? null, sourceMap, citationAudit)}
+      </li>
     ),
   };
 }
@@ -127,8 +147,8 @@ export function MessageEntry({ message, isStreaming }: MessageEntryProps) {
     const sourceMap = new Map(
       message.sources.map((s) => [s.citation_number, s]),
     );
-    return makeCitationComponents(sourceMap);
-  }, [message.sources]);
+    return makeCitationComponents(sourceMap, message.citationAudit);
+  }, [message.sources, message.citationAudit]);
 
   return (
     <Message from={message.role}>

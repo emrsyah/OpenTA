@@ -339,6 +339,15 @@ export function useStreamingChat(options?: UseStreamingChatOptions) {
                       ...s,
                       searchQuery: event.query,
                     }));
+                  } else if (event.action === "reformulated_query") {
+                    updateStep(event.step_id, (s) => ({
+                      ...s,
+                      reformulatedQuery: {
+                        original: event.original_query,
+                        query: event.query,
+                        paperCount: event.paper_count,
+                      },
+                    }));
                   }
                   break;
 
@@ -412,6 +421,78 @@ export function useStreamingChat(options?: UseStreamingChatOptions) {
                     conversationCreatedRef.current = true;
                     onConversationCreated(conversationId);
                   }
+                  break;
+
+                case "refinement_start":
+                  updateAssistant((msg) => {
+                    const newStep: PlanStep = {
+                      id: (msg.planSteps?.length || 0) + 1,
+                      title: "Refining answer...",
+                      description: event.gap_query || "Enriching response",
+                      needs_search: false,
+                      status: "active",
+                      thinking: "",
+                    };
+                    return {
+                      ...msg,
+                      refinementState: "starting",
+                      planSteps: [...(msg.planSteps || []), newStep],
+                    };
+                  });
+                  break;
+
+                case "refinement_search":
+                  updateAssistant((msg) => {
+                    const steps = msg.planSteps || [];
+                    const refinementStep = steps[steps.length - 1];
+                    if (refinementStep) {
+                      return {
+                        ...msg,
+                        refinementState: "searching",
+                        planSteps: [
+                          ...steps.slice(0, -1),
+                          { ...refinementStep, paperCount: event.paper_count },
+                        ],
+                      };
+                    }
+                    return msg;
+                  });
+                  break;
+
+                case "refinement_token":
+                  updateAssistant((msg) => {
+                    const newText = msg.content + event.content;
+                    return {
+                      ...msg,
+                      content: newText,
+                      parts: [{ type: "text", text: newText }],
+                      refinementState: "streaming",
+                    };
+                  });
+                  break;
+
+                case "refinement_done":
+                  updateAssistant((msg) => ({
+                    ...msg,
+                    content: event.content,
+                    parts: [{ type: "text", text: event.content }],
+                    sources: event.sources || msg.sources, // merge sources
+                    refinementState: "done",
+                    planSteps: (msg.planSteps || []).map((s) => ({
+                      ...s,
+                      status: "done" as const,
+                    })),
+                  }));
+                  break;
+
+                case "citation_audit":
+                  updateAssistant((msg) => ({
+                    ...msg,
+                    citationAudit: {
+                      isClean: event.is_clean,
+                      hallucinatedNumbers: event.hallucinated_citation_numbers,
+                    },
+                  }));
                   break;
 
                 case "error":

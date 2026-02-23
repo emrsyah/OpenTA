@@ -136,6 +136,19 @@ export function MessageResearchPanel({
                     )}
                   </TaskItem>
                 )}
+                {step.reformulatedQuery && (
+                  <TaskItem className="flex items-center gap-1.5 text-xs">
+                    <SearchIcon className="size-3 shrink-0" />
+                    <span className="italic text-muted-foreground">
+                      Search broadened to: {step.reformulatedQuery.query}
+                    </span>
+                    {step.reformulatedQuery.paperCount !== undefined && (
+                      <span className="shrink-0 text-muted-foreground">
+                        · {step.reformulatedQuery.paperCount} papers
+                      </span>
+                    )}
+                  </TaskItem>
+                )}
                 {step.thinking && (
                   <TaskItem className="whitespace-pre-wrap text-xs leading-relaxed">
                     {step.thinking}
