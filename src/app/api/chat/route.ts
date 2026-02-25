@@ -2,9 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { generateBackendToken } from "@/lib/auth/backend-jwt";
 
-// Allow streaming responses up to 30 seconds
-// Allow streaming responses up to 30 seconds
-export const maxDuration = 30;
+// Allow streaming responses up to 300 seconds (complex research queries can take 60s+)
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   try {
@@ -141,42 +140,42 @@ export async function POST(req: NextRequest) {
                 continue;
               }
 
-               try {
-                 const parsed = JSON.parse(data);
+              try {
+                const parsed = JSON.parse(data);
 
-                 if (parsed.type === "simple_thinking") {
-                   controller.enqueue(
-                     encoder.encode(
-                       JSON.stringify({
-                         type: "simple_thinking",
-                         message: parsed.message,
-                       }) + "\n",
-                     ),
-                   );
-                 } else if (parsed.type === "acknowledgment") {
-                   controller.enqueue(
-                     encoder.encode(
-                       JSON.stringify({
-                         type: "acknowledgment",
-                         content: parsed.content,
-                       }) + "\n",
-                     ),
-                   );
-                 } else if (parsed.type === "status") {
-                   controller.enqueue(
-                     encoder.encode(
-                       JSON.stringify({
-                         type: "status",
-                         step: parsed.step,
-                         message: parsed.message,
-                       }) + "\n",
-                     ),
-                   );
-                 } else if (parsed.type === "plan") {
+                if (parsed.type === "simple_thinking") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "simple_thinking",
+                        message: parsed.message,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "acknowledgment") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "acknowledgment",
+                        content: parsed.content,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "status") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "status",
+                        step: parsed.step,
+                        message: parsed.message,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "plan") {
                   controller.enqueue(
                     encoder.encode(
                       JSON.stringify({ type: "plan", steps: parsed.steps }) +
-                        "\n",
+                      "\n",
                     ),
                   );
                 } else if (parsed.type === "step_start") {
@@ -235,6 +234,27 @@ export async function POST(req: NextRequest) {
                         type: "step_done",
                         step_id: parsed.step_id,
                       }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "thinking_start") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({ type: "thinking_start" }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "thinking_token" && parsed.content) {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "thinking_token",
+                        content: parsed.content,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "thinking_end") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({ type: "thinking_end" }) + "\n",
                     ),
                   );
                 } else if (parsed.type === "answer_start") {
