@@ -14,11 +14,14 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
-    const limit = parseInt(searchParams.get("limit") || "50", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const offset = parseInt(searchParams.get("offset") || "0", 10);
     const conversations = await getConversationsByUserId(
       session.user.id,
       limit,
+      offset,
     );
+
     return NextResponse.json({ conversations });
   } catch (error) {
     console.error("Error fetching conversations:", error);
@@ -50,6 +53,7 @@ export async function POST(req: Request) {
       isIncognito,
       userId: session.user.id,
     });
+
     return NextResponse.json({ conversation }, { status: 201 });
   } catch (error) {
     console.error("Error creating conversation:", error);
