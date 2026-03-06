@@ -158,6 +158,8 @@ function BrowseContent() {
           params.append("yearTo", state.yearTo);
         if (state.subject && state.subject !== "all")
           params.append("subject", state.subject);
+        if (state.editor && state.editor !== "all")
+          params.append("editor", state.editor);
 
         const response = await fetch(`/api/catalog?${params}`);
         const data = await response.json();
@@ -180,6 +182,7 @@ function BrowseContent() {
     state.yearFrom,
     state.yearTo,
     state.subject,
+    state.editor,
     pagination.page,
     pagination.limit,
   ]);
@@ -287,9 +290,10 @@ function BrowseContent() {
             <FilterBar.YearRange />
           </div>
 
-          {/* Filters Row 2: Subject, Badges, Results Count */}
+          {/* Filters Row 2: Subject, Editor, Badges, Results Count */}
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <FilterBar.Subject availableSubjects={availableSubjects} />
+            <FilterBar.Editor />
             <ActiveFiltersBadges />
             <ResultsCount
               pagination={pagination}
