@@ -8,6 +8,7 @@ import { createContext, use, useEffect, useRef, useState } from "react";
 import { useConversations } from "@/hooks/use-conversations";
 import type { ChatMessage } from "@/hooks/use-streaming-chat";
 import { useStreamingChat } from "@/hooks/use-streaming-chat";
+import type { CatalogType, ChatFilters } from "./chat-filter-types";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -23,12 +24,17 @@ export interface ChatState {
   messages: ChatMessage[];
   status: "ready" | "streaming" | "error" | "submitted";
   isLoadingHistory: boolean;
+  filters: ChatFilters;
 }
 
 export interface ChatActions {
   setWebSearchEnabled: (enabled: boolean) => void;
   setModel: (model: string) => void;
   setSourceTypes: (types: SourceType[]) => void;
+  setFilters: (
+    filters: ChatFilters | ((prev: ChatFilters) => ChatFilters),
+  ) => void;
+  clearFilters: () => void;
   sendMessage: (text: string, files?: any[]) => void;
 }
 
@@ -52,6 +58,7 @@ export interface ChatProviderProps {
   initialWebSearch?: boolean;
   initialQuery?: string;
   initialSourceTypes?: SourceType[];
+  initialFilters?: ChatFilters;
 }
 
 export function ChatProvider({
@@ -60,8 +67,10 @@ export function ChatProvider({
   initialWebSearch = false,
   initialQuery,
   initialSourceTypes,
+  initialFilters,
 }: ChatProviderProps) {
-  const { addOptimisticConversation, updateConversationTitle, refresh } = useConversations();
+  const { addOptimisticConversation, updateConversationTitle, refresh } =
+    useConversations();
   const initialSentRef = useRef(false);
 
   // Optimistic update: add conversation to sidebar immediately on mount
@@ -78,10 +87,12 @@ export function ChatProvider({
   const [sourceTypes, setSourceTypes] = useState<SourceType[]>(
     initialSourceTypes ?? ["all"],
   );
+  const [filters, setFilters] = useState<ChatFilters>(initialFilters ?? {});
 
   // Hook integration
   const { messages, status, sendMessage, isLoadingHistory } = useStreamingChat({
     conversationId,
+    filters,
     onConversationCreated: () => {
       refresh();
     },
@@ -96,9 +107,11 @@ export function ChatProvider({
     if (!messageText) return;
 
     sendMessage(messageText, {
-      body: { conversationId, model, webSearch: webSearchEnabled },
+      body: { conversationId, model, webSearch: webSearchEnabled, filters },
     });
   };
+
+  const clearFilters = () => setFilters({});
 
   // Handle initial query from prop (passed from Server Component)
   useEffect(() => {
@@ -124,12 +137,15 @@ export function ChatProvider({
     messages,
     status,
     isLoadingHistory,
+    filters,
   };
 
   const actions: ChatActions = {
     setWebSearchEnabled,
     setModel,
     setSourceTypes,
+    setFilters,
+    clearFilters,
     sendMessage: sendMessageWithFiles,
   };
 

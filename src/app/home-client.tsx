@@ -1,6 +1,5 @@
 "use client";
 
-import { GlobeIcon } from "lucide-react";
 import { nanoid } from "nanoid";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -18,32 +17,22 @@ import {
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import {
-  Message,
-  MessageContent,
-  MessageResponse,
-} from "@/components/ai-elements/message";
-import {
   PromptInput,
-  PromptInputActionAddAttachments,
-  PromptInputActionMenu,
-  PromptInputActionMenuContent,
-  PromptInputActionMenuTrigger,
   PromptInputBody,
-  PromptInputButton,
   PromptInputFooter,
   PromptInputHeader,
   type PromptInputMessage,
-  PromptInputSelect,
-  PromptInputSelectContent,
-  PromptInputSelectItem,
-  PromptInputSelectTrigger,
-  PromptInputSelectValue,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
   usePromptInputAttachments,
 } from "@/components/ai-elements/prompt-input";
-import { SourceSelector, type SourceType } from "@/components/chat";
+import {
+  ActiveFilterTags,
+  type ChatFilters,
+  FilterPanel,
+  QuickFilterChips,
+} from "@/components/chat";
 import { SuggestionChips } from "@/components/suggestion-chips";
 import { authClient, signInGoogle } from "@/lib/auth/client";
 
@@ -70,19 +59,12 @@ const PromptInputAttachmentsDisplay = () => {
   );
 };
 
-const models = [
-  { id: "gpt-4o", name: "GPT-4o" },
-  { id: "claude-opus-4-20250514", name: "Claude 4 Opus" },
-];
-
 export function HomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, isPending } = authClient.useSession();
   const [text, setText] = useState<string>("");
-  const [model, setModel] = useState<string>(models[0].id);
-  const [useWebSearch, setUseWebSearch] = useState<boolean>(false);
-  const [sourceTypes, setSourceTypes] = useState<SourceType[]>(["all"]);
+  const [filters, setFilters] = useState<ChatFilters>({});
 
   // Handle error parameters from redirects
   useEffect(() => {
@@ -138,15 +120,28 @@ export function HomePage() {
     const conversationId = nanoid();
     const params = new URLSearchParams();
     if (message.text) params.set("q", message.text);
-    if (sourceTypes.length > 0 && !sourceTypes.includes("all")) {
-      params.set("sources", sourceTypes.join(","));
+
+    // Pass filters through URL params if any are set
+    if (Object.keys(filters).length > 0) {
+      params.set("filters", JSON.stringify(filters));
     }
+
     router.push(`/${conversationId}?${params.toString()}`);
   };
 
   const handleSuggestionClick = (suggestionText: string) => {
     setText(suggestionText);
   };
+
+  const clearFilters = () => setFilters({});
+
+  const hasActiveFilters = !!(
+    filters.catalogType ||
+    filters.yearFrom ||
+    filters.yearTo ||
+    filters.author ||
+    filters.hasElectronicAccess
+  );
 
   return (
     <div className="flex md:mx-4 flex-col h-[calc(100vh-2rem)]">
@@ -187,6 +182,18 @@ export function HomePage() {
       </Conversation>
 
       <div className="px-4 py-3 max-w-4xl mx-auto w-full">
+        {/* Active Filter Tags */}
+        {hasActiveFilters && (
+          <div className="mb-3">
+            <ActiveFilterTags filters={filters} onChange={setFilters} />
+          </div>
+        )}
+
+        {/* Quick Filter Chips */}
+        {/* <div className="mb-3">
+          <QuickFilterChips filters={filters} onChange={setFilters} />
+        </div> */}
+
         <PromptInput
           onSubmit={handleSubmit}
           className="w-full"
@@ -207,42 +214,11 @@ export function HomePage() {
           </PromptInputBody>
           <PromptInputFooter>
             <PromptInputTools>
-              {/* <PromptInputActionMenu>
-                <PromptInputActionMenuTrigger />
-                <PromptInputActionMenuContent>
-                  <PromptInputActionAddAttachments />
-                </PromptInputActionMenuContent>
-              </PromptInputActionMenu> */}
-              {/* <SourceSelector
-                onChange={setSourceTypes}
-                selectedSources={sourceTypes}
+              <FilterPanel
+                filters={filters}
+                onChange={setFilters}
+                onClear={clearFilters}
               />
-              <PromptInputButton
-                onClick={() => setUseWebSearch(!useWebSearch)}
-                tooltip={{ content: "Change to Deep Research mode" }}
-                variant={useWebSearch ? "default" : "ghost"}
-                type="button"
-              >
-                <GlobeIcon size={16} />
-                <span>Deep Research</span>
-              </PromptInputButton> */}
-              {/* <PromptInputSelect
-                onValueChange={(value) => {
-                  setModel(value);
-                }}
-                value={model}
-              >
-                <PromptInputSelectTrigger>
-                  <PromptInputSelectValue />
-                </PromptInputSelectTrigger>
-                <PromptInputSelectContent>
-                  {models.map((model) => (
-                    <PromptInputSelectItem key={model.id} value={model.id}>
-                      {model.name}
-                    </PromptInputSelectItem>
-                  ))}
-                </PromptInputSelectContent>
-              </PromptInputSelect> */}
             </PromptInputTools>
             <PromptInputSubmit disabled={!text} />
           </PromptInputFooter>

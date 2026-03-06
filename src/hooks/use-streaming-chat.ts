@@ -3,6 +3,7 @@
 import type { ChatStatus } from "ai";
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { ChatFilters } from "@/components/chat/chat-filter-types";
 
 export type MessageRole = "user" | "assistant";
 
@@ -75,6 +76,7 @@ interface DbMessage {
 interface UseStreamingChatOptions {
   conversationId?: string;
   api?: string;
+  filters?: ChatFilters;
   onConversationCreated?: (conversationId: string) => void;
   onTitleGenerated?: (conversationId: string, title: string) => void;
 }
@@ -153,6 +155,7 @@ export function useStreamingChat(options?: UseStreamingChatOptions) {
   const {
     conversationId,
     api = "/api/chat",
+    filters,
     onConversationCreated,
     onTitleGenerated,
   } = options || {};

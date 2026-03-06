@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
   ChatConversationArea,
+  type ChatFilters,
   ChatFrame,
   ChatInputArea,
   ChatProvider,
@@ -39,10 +40,21 @@ export default async function ChatPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ q?: string; sources?: string }>;
+  searchParams: Promise<{ q?: string; sources?: string; filters?: string }>;
 }) {
   const { id } = await params;
-  const { q, sources } = await searchParams;
+  const { q, sources, filters } = await searchParams;
+
+  // Parse filters from URL if present
+  let initialFilters: ChatFilters | undefined;
+  if (filters) {
+    try {
+      initialFilters = JSON.parse(filters) as ChatFilters;
+    } catch {
+      // Invalid JSON, ignore filters
+      initialFilters = undefined;
+    }
+  }
 
   // Validate conversation exists
   // Note: New conversations with an initial query (q) are allowed
@@ -67,6 +79,7 @@ export default async function ChatPage({
         initialWebSearch={false}
         initialQuery={q}
         initialSourceTypes={initialSourceTypes}
+        initialFilters={initialFilters}
       >
         <ChatFrame>
           <ChatConversationArea />
