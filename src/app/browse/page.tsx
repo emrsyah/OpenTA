@@ -10,7 +10,10 @@ import {
   SORT_OPTIONS,
   useFilters,
 } from "@/components/browse/filter-context";
-import { ResultsPagination } from "@/components/browse/results-pagination";
+import {
+  PaginationControls,
+  ResultsCount,
+} from "@/components/browse/results-pagination";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -278,7 +281,7 @@ function BrowseContent() {
           </div>
 
           {/* Filters Row 1: Search, Type, Years */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <FilterBar.Search />
             <FilterBar.Type />
             <FilterBar.YearRange />
@@ -288,15 +291,15 @@ function BrowseContent() {
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <FilterBar.Subject availableSubjects={availableSubjects} />
             <ActiveFiltersBadges />
-            <ResultsPagination
+            <ResultsCount
               pagination={pagination}
-              onPageChange={handlePageChange}
               itemsCount={items.length}
               loading={loading}
             />
           </div>
         </div>
       </div>
+
       <div className="container mx-auto px-4 py-8">
         {loading ? (
           <div
@@ -345,6 +348,13 @@ function BrowseContent() {
                 />
               ))}
             </div>
+
+            {/* Pagination Controls at Bottom */}
+            <PaginationControls
+              pagination={pagination}
+              onPageChange={handlePageChange}
+              loading={loading}
+            />
           </>
         )}
       </div>

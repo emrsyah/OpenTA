@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { messages, conversationId, model, webSearch } = body;
+    const { messages, conversationId, model, webSearch, filters } = body;
 
     // Get the last user message
     const lastMessage = messages?.[messages.length - 1];
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Proxy the request to the backend agent with JWT authentication
-    const response = await fetch(`${backendUrl}/chat/basic`, {
+    const response = await fetch(`${backendUrl}/chat/new`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -83,6 +83,11 @@ export async function POST(req: NextRequest) {
           conversation_id: conversationId,
           is_incognito: false,
           attachments: [],
+          ...(filters?.catalogType && { catalog_type: filters.catalogType }),
+          ...(filters?.yearFrom && { year_from: filters.yearFrom }),
+          ...(filters?.yearTo && { year_to: filters.yearTo }),
+          ...(filters?.author && { author: filters.author }),
+          ...(filters?.hasElectronicAccess !== undefined && { has_electronic_access: filters.hasElectronicAccess }),
           // Note: user_id is extracted from JWT by Python backend, not sent in body
         },
       }),
