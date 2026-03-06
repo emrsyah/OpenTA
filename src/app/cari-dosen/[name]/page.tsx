@@ -2,11 +2,15 @@
 
 import {
   ArrowLeft,
+  BookMarked,
   BookOpen,
   Calendar,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Globe,
+  GraduationCap,
   Loader2,
   Tag,
   User,
@@ -55,6 +59,26 @@ interface DetailResponse {
   };
 }
 
+interface WebSearchResult {
+  title: string;
+  url: string;
+  text?: string;
+  publishedDate?: string;
+  score?: number;
+}
+
+interface WebSearchResults {
+  academic: WebSearchResult[];
+  publications: WebSearchResult[];
+  other: WebSearchResult[];
+}
+
+interface WebSearchResponse {
+  query: string;
+  results: WebSearchResults;
+  total: number;
+}
+
 export default function LecturerDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -64,6 +88,10 @@ export default function LecturerDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [webSearchExpanded, setWebSearchExpanded] = useState(false);
+  const [webSearchLoading, setWebSearchLoading] = useState(false);
+  const [webSearchResults, setWebSearchResults] = useState<WebSearchResponse | null>(null);
+  const [webSearchError, setWebSearchError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLecturerData(currentPage);
@@ -100,6 +128,29 @@ export default function LecturerDetailPage() {
     if (newPage >= 1 && data && newPage <= data.pagination.totalPages) {
       setCurrentPage(newPage);
       window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleWebSearch = async () => {
+    if (webSearchLoading || webSearchResults) return;
+    
+    setWebSearchLoading(true);
+    setWebSearchError(null);
+    
+    try {
+      const response = await fetch(`/api/lecturers/web-search?name=${encodeURIComponent(name)}`);
+      
+      if (!response.ok) {
+        throw new Error("Failed to search lecturer information");
+      }
+      
+      const data: WebSearchResponse = await response.json();
+      setWebSearchResults(data);
+    } catch (err) {
+      console.error("Web search error:", err);
+      setWebSearchError("Gagal mencari informasi dosen di internet.");
+    } finally {
+      setWebSearchLoading(false);
     }
   };
 
@@ -229,6 +280,17 @@ export default function LecturerDetailPage() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Web Search Card */}
+            <WebSearchCard
+              name={lecturer.name}
+              isExpanded={webSearchExpanded}
+              onToggle={() => setWebSearchExpanded(!webSearchExpanded)}
+              isLoading={webSearchLoading}
+              results={webSearchResults}
+              error={webSearchError}
+              onSearch={handleWebSearch}
+            />
           </div>
 
           {/* Main Content - Papers List */}
@@ -375,6 +437,202 @@ function PaperCard({ paper }: { paper: Paper }) {
           </Button>
         )}
       </CardContent>
+    </Card>
+  );
+}
+
+function WebSearchCard({
+  name,
+  isExpanded,
+  onToggle,
+  isLoading,
+  results,
+  error,
+  onSearch,
+}: {
+  name: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  isLoading: boolean;
+  results: WebSearchResponse | null;
+  error: string | null;
+  onSearch: () => void;
+}) {
+  return (
+    <Card className="overflow-hidden">
+      {/* Header - Collapsible */}
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors text-left"
+      >
+        <div className="flex items-center gap-2">
+          <Globe className="w-5 h-5 text-primary" />
+          <span className="font-semibold">Cari di Internet</span>
+        </div>
+        <ChevronDown
+          className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {/* Content */}
+      {isExpanded && (
+        <CardContent className="pt-0 pb-4 px-4 border-t">
+          {/* Search Button */}
+          {!results && !isLoading && (
+            <div className="py-4">
+              <Button
+                onClick={onSearch}
+                className="w-full"
+                variant="secondary"
+              >
+                <Globe className="w-4 h-4 mr-2" />
+                Cari "{name}" di Internet
+              </Button>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Mencari profil akademik SINTA, Google Scholar, dan publikasi
+              </p>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className="py-8 flex flex-col items-center gap-2">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">
+                Mencari informasi dosen...
+              </p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="py-4 text-center">
+              <p className="text-sm text-destructive">{error}</p>
+              <Button variant="outline" size="sm" onClick={onSearch} className="mt-2">
+                Coba Lagi
+              </Button>
+            </div>
+          )}
+
+          {/* Results */}
+          {results && (
+            <div className="space-y-4 pt-4">
+              {/* Academic Profiles */}
+              {results.results.academic.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <GraduationCap className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">Profil Akademik</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {results.results.academic.length}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    {results.results.academic.map((result, idx) => (
+                      <a
+                        key={idx}
+                        href={result.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
+                      >
+                        <ExternalLink className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-primary group-hover:underline line-clamp-2">
+                            {result.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {new URL(result.url).hostname}
+                          </p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Publications */}
+              {results.results.publications.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <BookMarked className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">Publikasi</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {results.results.publications.length}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    {results.results.publications.map((result, idx) => (
+                      <a
+                        key={idx}
+                        href={result.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
+                      >
+                        <ExternalLink className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-primary group-hover:underline line-clamp-2">
+                            {result.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {new URL(result.url).hostname}
+                          </p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Other Results */}
+              {results.results.other.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Globe className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">Lainnya</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {results.results.other.length}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    {results.results.other.slice(0, 3).map((result, idx) => (
+                      <a
+                        key={idx}
+                        href={result.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
+                      >
+                        <ExternalLink className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-primary group-hover:underline line-clamp-2">
+                            {result.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {new URL(result.url).hostname}
+                          </p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* No Results */}
+              {results.total === 0 && (
+                <div className="py-4 text-center">
+                  <Globe className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Tidak ada hasil ditemukan
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      )}
     </Card>
   );
 }
