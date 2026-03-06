@@ -68,7 +68,7 @@ export function CitationHoverCard({
                   <InlineCitationSource
                     title={s.title}
                     description={s.abstract}
-                    url={`https://openlibrary.telkomuniversity.ac.id/home/catalog/id/${(s.id).split("_")[1]}`}
+                    url={`https://openlibrary.telkomuniversity.ac.id/home/catalog/id/${s.id.split("_")[1]}`}
                   >
                     <p className="text-muted-foreground text-xs">
                       {s.authors.slice(0, 3).join(", ")}

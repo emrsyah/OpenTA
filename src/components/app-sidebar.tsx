@@ -62,6 +62,12 @@ const items = [
     icon: BookOpen,
     description: "Explore alumni research",
   },
+  {
+    title: "Cari Dosen",
+    url: "/cari-dosen",
+    icon: GraduationCap,
+    description: "Find research supervisors",
+  },
   // {
   //   title: "Workspace",
   //   url: "/workspace",

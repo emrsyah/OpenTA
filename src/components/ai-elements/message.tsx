@@ -17,7 +17,12 @@ import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
-import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, CopyIcon } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CheckIcon,
+  CopyIcon,
+} from "lucide-react";
 import {
   createContext,
   memo,

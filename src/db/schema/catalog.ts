@@ -1,10 +1,54 @@
-import { pgTable, index, serial, text, varchar, smallint, integer, vector, pgEnum } from "drizzle-orm/pg-core"
-import { sql } from "drizzle-orm"
+import { sql } from "drizzle-orm";
+import {
+  index,
+  integer,
+  pgEnum,
+  pgTable,
+  serial,
+  smallint,
+  text,
+  varchar,
+  vector,
+} from "drizzle-orm/pg-core";
 
-export const catalogType = pgEnum("catalog_type", ['Artikel - Restricted Use', 'Bahan Ajar', 'Buku - Circulation (BI Corner)', 'Buku - Circulation (Dapat Dipinjam)', 'Buku - Elektronik (E-Book)', 'Buku - Elektronik (E-Book) Kindle', 'Buku - Elektronik (E-Book) Restricted', 'Buku - Elektronik (E-Book) Tel-U Press', 'Buku - LAC', 'Buku - Reference (Hanya Baca di Tempat)', 'Buku Rekreatif - Circulation', 'Buku Softskill - Circulation', 'Case Studies', 'Disertasi - Reference', 'E-Article', 'Institutional Content', 'Jurnal Internasional - Reference', 'Jurnal Nasional - Reference', 'Jurnal Terakreditasi DIKTI - Reference', 'Karya Ilmiah - Disertasi (S3) - Reference', 'Karya Ilmiah - Skripsi (S1) - Reference', 'Karya Ilmiah - TA (D3) - Reference', 'Karya Ilmiah - Thesis (S2) - Reference', 'Majalah - Reference', 'Majalah Bundling', 'Majalah Ilmiah - Reference', 'Majalah Populer - Reference', 'Modul Praktikum ( Electronic )', 'Proceeding ( Electronic )', 'e - Article Journal', 'ePoster', 'skripsi'])
+export const catalogType = pgEnum("catalog_type", [
+  "Artikel - Restricted Use",
+  "Bahan Ajar",
+  "Buku - Circulation (BI Corner)",
+  "Buku - Circulation (Dapat Dipinjam)",
+  "Buku - Elektronik (E-Book)",
+  "Buku - Elektronik (E-Book) Kindle",
+  "Buku - Elektronik (E-Book) Restricted",
+  "Buku - Elektronik (E-Book) Tel-U Press",
+  "Buku - LAC",
+  "Buku - Reference (Hanya Baca di Tempat)",
+  "Buku Rekreatif - Circulation",
+  "Buku Softskill - Circulation",
+  "Case Studies",
+  "Disertasi - Reference",
+  "E-Article",
+  "Institutional Content",
+  "Jurnal Internasional - Reference",
+  "Jurnal Nasional - Reference",
+  "Jurnal Terakreditasi DIKTI - Reference",
+  "Karya Ilmiah - Disertasi (S3) - Reference",
+  "Karya Ilmiah - Skripsi (S1) - Reference",
+  "Karya Ilmiah - TA (D3) - Reference",
+  "Karya Ilmiah - Thesis (S2) - Reference",
+  "Majalah - Reference",
+  "Majalah Bundling",
+  "Majalah Ilmiah - Reference",
+  "Majalah Populer - Reference",
+  "Modul Praktikum ( Electronic )",
+  "Proceeding ( Electronic )",
+  "e - Article Journal",
+  "ePoster",
+  "skripsi",
+]);
 
-
-export const catalog = pgTable("catalog", {
+export const catalog = pgTable(
+  "catalog",
+  {
     id: serial().primaryKey().notNull(),
     title: text().notNull(),
     catalogNumber: varchar("catalog_number", { length: 100 }),
@@ -21,6 +65,16 @@ export const catalog = pgTable("catalog", {
     accessLink: text("access_link"),
     abstract: text(),
     embedding: vector({ dimensions: 1024 }),
-}, (table) => [
-    index("catalog_publication_year_idx").using("btree", table.publicationYear.asc().nullsLast().op("int2_ops")),
-]);
+  },
+  (table) => [
+    index("catalog_publication_year_idx").using(
+      "btree",
+      table.publicationYear.asc().nullsLast().op("int2_ops"),
+    ),
+    index("catalog_editor_idx").using(
+      "gin",
+      sql`to_tsvector('indonesian', COALESCE(${table.editor}, ''))`,
+    ),
+    index("catalog_type_idx").using("btree", table.catalogType),
+  ],
+);

@@ -32,7 +32,12 @@ export interface ReformulatedQuery {
   paperCount: number;
 }
 
-export type RefinementState = 'idle' | 'starting' | 'searching' | 'streaming' | 'done';
+export type RefinementState =
+  | "idle"
+  | "starting"
+  | "searching"
+  | "streaming"
+  | "done";
 
 export interface PlanStep {
   id: number;
@@ -56,7 +61,7 @@ export interface ChatMessage {
   planSteps?: PlanStep[];
   answerStarted?: boolean;
   isThinking?: boolean;
-  thinkingContent?: string;   // accumulated CoT reasoning trace
+  thinkingContent?: string; // accumulated CoT reasoning trace
   acknowledgment?: string;
   citationAudit?: CitationAuditResult;
   refinementState?: RefinementState;
@@ -393,7 +398,8 @@ export function useStreamingChat(options?: UseStreamingChatOptions) {
                   // Accumulate CoT reasoning tokens (shown in a collapsible block)
                   updateAssistant((msg) => ({
                     ...msg,
-                    thinkingContent: (msg.thinkingContent ?? "") + event.content,
+                    thinkingContent:
+                      (msg.thinkingContent ?? "") + event.content,
                   }));
                   break;
 

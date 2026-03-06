@@ -20,11 +20,11 @@ export function UserMenu() {
   const user = session.user;
   const initials = user.name
     ? user.name
-      .split(" ")
-      .map((n: string) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
     : user.email?.[0].toUpperCase() || "?";
 
   const handleSignOut = async () => {

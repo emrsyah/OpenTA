@@ -1,6 +1,6 @@
 "use client";
 
-import { Filter, Search, Tag } from "lucide-react";
+import { Filter, Search, Tag, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -136,6 +136,44 @@ FilterBar.Subject = function FilterBarSubject({
             {subj}
           </SelectItem>
         ))}
+      </SelectContent>
+    </Select>
+  );
+};
+
+// Editor (Lecturer) Filter Component
+interface FilterBarEditorProps {
+  availableEditors?: string[];
+}
+
+FilterBar.Editor = function FilterBarEditor({
+  availableEditors = [],
+}: FilterBarEditorProps) {
+  const { state, actions } = useFilters();
+
+  return (
+    <Select value={state.editor} onValueChange={actions.setEditor}>
+      <SelectTrigger className="h-8 w-[180px] sm:w-[200px] bg-background/30 hover:bg-background border-muted-foreground/15 text-[11px] font-medium">
+        <div className="flex items-center gap-1.5 overflow-hidden">
+          <User className="w-3 h-3 text-muted-foreground shrink-0" />
+          <span className="truncate">
+            {state.editor === "all" ? "All Lecturers" : state.editor}
+          </span>
+        </div>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All Lecturers</SelectItem>
+        {availableEditors.length > 0 ? (
+          availableEditors.slice(0, 50).map((editor) => (
+            <SelectItem key={editor} value={editor}>
+              {editor}
+            </SelectItem>
+          ))
+        ) : (
+          <SelectItem value="loading" disabled>
+            Type to search lecturers...
+          </SelectItem>
+        )}
       </SelectContent>
     </Select>
   );

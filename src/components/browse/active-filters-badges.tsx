@@ -1,6 +1,6 @@
 "use client";
 
-import { Filter, Tag, X } from "lucide-react";
+import { Filter, Tag, User, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useFilters } from "./filter-context";
@@ -73,6 +73,23 @@ export function ActiveFiltersBadges() {
             <button
               onClick={() => actions.setSubject("all")}
               className="ml-1 hover:bg-orange-500/10 rounded-full p-0.5 shrink-0"
+            >
+              <X className="w-2.5 h-2.5" />
+            </button>
+          </Badge>
+        )}
+        {state.editor !== "all" && (
+          <Badge
+            variant="secondary"
+            className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider bg-blue-500/5 text-blue-600 border-blue-500/20 dark:text-blue-400"
+          >
+            <User className="w-2.5 h-2.5 mr-1 opacity-70 shrink-0" />
+            <span className="truncate max-w-[100px]">
+              {state.editor.slice(0, 12)}
+            </span>
+            <button
+              onClick={() => actions.setEditor("all")}
+              className="ml-1 hover:bg-blue-500/10 rounded-full p-0.5 shrink-0"
             >
               <X className="w-2.5 h-2.5" />
             </button>
