@@ -9,6 +9,7 @@ interface LecturerResult {
   name: string;
   paperCount: number;
   relevanceScore: number;
+  searchMethod?: "vector" | "fulltext";
   stats: {
     totalPapers: number;
     yearRange: { min: number | null; max: number | null };

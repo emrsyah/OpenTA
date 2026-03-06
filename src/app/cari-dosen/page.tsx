@@ -1,18 +1,31 @@
 "use client";
 
-import { BookOpen, GraduationCap, Loader2, Search, Users } from "lucide-react";
+import {
+  BookOpen,
+  GraduationCap,
+  Loader2,
+  Search,
+  Sparkles,
+  Users,
+  Zap,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { LecturerCard } from "@/components/lecturer-card";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
+type SearchMode = "keyword" | "semantic";
 
 interface LecturerResult {
   name: string;
   paperCount: number;
   relevanceScore: number;
+  searchMethod: "vector" | "fulltext";
   stats: {
     totalPapers: number;
     yearRange: { min: number | null; max: number | null };
@@ -35,6 +48,7 @@ interface SearchResponse {
     topic: string;
     lecturerName: string;
   };
+  searchMethod: "vector" | "fulltext";
 }
 
 const EXAMPLE_TOPICS = [
@@ -45,57 +59,86 @@ const EXAMPLE_TOPICS = [
   "optimasi rute pengiriman menggunakan algoritma genetika",
 ];
 
+const SEARCH_MODE_CONFIG = {
+  keyword: {
+    label: "Kata Kunci",
+    icon: Zap,
+    description: "Cepat (2-3 detik)",
+    detail: "Pencarian berdasarkan kata kunci eksak",
+  },
+  semantic: {
+    label: "Semantik (AI)",
+    icon: Sparkles,
+    description: "Lebih dalam (5-10 detik)",
+    detail: "Pencarian berbasis AI yang memahami makna",
+  },
+} as const;
+
 export default function CariDosenPage() {
   const router = useRouter();
   const [topic, setTopic] = useState("");
+  const [searchMode, setSearchMode] = useState<SearchMode>("keyword");
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [results, setResults] = useState<SearchResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const searchLecturers = useCallback(async (searchTopic: string) => {
-    if (!searchTopic.trim()) return;
+  const searchLecturers = useCallback(
+    async (searchTopic: string, mode: SearchMode) => {
+      if (!searchTopic.trim()) return;
 
-    setIsSearching(true);
-    setError(null);
-    setHasSearched(true);
+      setIsSearching(true);
+      setError(null);
+      setHasSearched(true);
 
-    try {
-      const params = new URLSearchParams({
-        topic: searchTopic,
-        limit: "20",
-        minPapers: "1",
-      });
+      try {
+        const params = new URLSearchParams({
+          topic: searchTopic,
+          limit: "20",
+          minPapers: "1",
+          searchMode: mode,
+        });
 
-      const response = await fetch(`/api/lecturers/search?${params}`);
+        const response = await fetch(`/api/lecturers/search?${params}`);
 
-      if (!response.ok) {
-        throw new Error("Failed to search lecturers");
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error || "Terjadi kesalahan saat mencari dosen",
+          );
+        }
+
+        const data: SearchResponse = await response.json();
+        setResults(data);
+      } catch (err) {
+        console.error("Search error:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Terjadi kesalahan saat mencari dosen. Silakan coba lagi.",
+        );
+      } finally {
+        setIsSearching(false);
       }
-
-      const data: SearchResponse = await response.json();
-      setResults(data);
-    } catch (err) {
-      console.error("Search error:", err);
-      setError("Terjadi kesalahan saat mencari dosen. Silakan coba lagi.");
-    } finally {
-      setIsSearching(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    searchLecturers(topic);
+    searchLecturers(topic, searchMode);
   };
 
   const handleExampleClick = (example: string) => {
     setTopic(example);
-    searchLecturers(example);
+    searchLecturers(example, searchMode);
   };
 
   const handleViewLecturer = (name: string) => {
     router.push(`/cari-dosen/${encodeURIComponent(name)}`);
   };
+
+  const currentModeConfig = SEARCH_MODE_CONFIG[searchMode];
 
   return (
     <div className="min-h-screen bg-background">
@@ -117,6 +160,44 @@ export default function CariDosenPage() {
               Sistem akan mencocokkan topikmu dengan skripsi yang pernah
               dibimbing.
             </p>
+
+            {/* Search Mode Toggle */}
+            <div className="mb-6">
+              <div className="flex items-center justify-center gap-1 p-1 bg-muted/50 rounded-lg w-fit mx-auto">
+                {(Object.keys(SEARCH_MODE_CONFIG) as SearchMode[]).map(
+                  (mode) => {
+                    const config = SEARCH_MODE_CONFIG[mode];
+                    const Icon = config.icon;
+                    const isActive = searchMode === mode;
+
+                    return (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setSearchMode(mode)}
+                        className={cn(
+                          "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+                          isActive
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground hover:bg-background/50",
+                        )}
+                      >
+                        <Icon
+                          className={cn(
+                            "w-4 h-4",
+                            isActive && mode === "semantic" && "text-primary",
+                          )}
+                        />
+                        <span>{config.label}</span>
+                      </button>
+                    );
+                  },
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {currentModeConfig.detail} • {currentModeConfig.description}
+              </p>
+            </div>
 
             {/* Search Form */}
             <form
@@ -140,12 +221,18 @@ export default function CariDosenPage() {
                   {isSearching ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Mencari...
+                      {searchMode === "semantic"
+                        ? "Menganalisis..."
+                        : "Mencari..."}
                     </>
                   ) : (
                     <>
-                      <Search className="w-4 h-4 mr-2" />
-                      Cari
+                      {searchMode === "semantic" ? (
+                        <Sparkles className="w-4 h-4 mr-2" />
+                      ) : (
+                        <Search className="w-4 h-4 mr-2" />
+                      )}
+                      {searchMode === "semantic" ? "Analisis" : "Cari"}
                     </>
                   )}
                 </Button>
@@ -221,9 +308,17 @@ export default function CariDosenPage() {
                   {results.query.topic}&quot;
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Users className="w-4 h-4" />
-                <span>Diurutkan berdasarkan relevansi</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Users className="w-4 h-4" />
+                  <span>Diurutkan berdasarkan relevansi</span>
+                </div>
+                {results.searchMethod === "vector" && (
+                  <div className="flex items-center gap-1.5 text-xs text-primary bg-primary/10 px-2 py-1 rounded-full">
+                    <Sparkles className="w-3 h-3" />
+                    <span>Semantik (AI)</span>
+                  </div>
+                )}
               </div>
             </div>
 
