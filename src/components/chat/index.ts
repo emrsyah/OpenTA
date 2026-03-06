@@ -13,6 +13,7 @@ export { ChatProvider, type SourceType, useChatContext } from "./chat-provider";
 export { CitationHoverCard } from "./citation-hover-card";
 export { FilterPanel } from "./filter-panel";
 export { MessageEntry } from "./message-entry";
+export { MessageRefinementIndicator } from "./message-refinement-indicator";
 export { MessageResearchPanel } from "./message-research-panel";
 export { MessageSources } from "./message-sources";
 export { PromptInputAttachmentsDisplay } from "./prompt-input-attachments-display";

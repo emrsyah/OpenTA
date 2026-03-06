@@ -12,6 +12,7 @@ import type {
   Source,
 } from "@/hooks/use-streaming-chat";
 import { CitationHoverCard } from "./citation-hover-card";
+import { MessageRefinementIndicator } from "./message-refinement-indicator";
 import { MessageResearchPanel } from "./message-research-panel";
 import { MessageSources } from "./message-sources";
 
@@ -25,21 +26,22 @@ interface MessageEntryProps {
  */
 function extractTextContent(message: ChatMessageType): string {
   const texts: string[] = [];
-  
+
   // Add acknowledgment if present (assistant messages)
   if (message.acknowledgment) {
     texts.push(message.acknowledgment);
   }
-  
+
   // Add all text parts
   for (const part of message.parts) {
     if (part.type === "text") {
       texts.push(part.text);
     }
   }
-  
+
   return texts.join("\n\n");
 }
+
 /**
  * Process children to handle citations in markdown content
  * This replaces citation markers with CitationHoverCard components
@@ -174,6 +176,11 @@ export function MessageEntry({ message, isStreaming }: MessageEntryProps) {
   // Extract text for copy button
   const textContent = useMemo(() => extractTextContent(message), [message]);
 
+  // Check if answer is being refined
+  const isRefining =
+    message.refinementState === "streaming" ||
+    message.refinementState === "searching";
+
   return (
     <Message from={message.role}>
       <MessageContent>
@@ -187,24 +194,42 @@ export function MessageEntry({ message, isStreaming }: MessageEntryProps) {
         {message.role === "assistant" && (
           <MessageResearchPanel isStreaming={isStreaming} message={message} />
         )}
-        {message.parts.map((part, i) => {
-          if (part.type !== "text") {
-            return null;
+
+        {/* Refinement indicator - appears between research panel and answer */}
+        {message.role === "assistant" && message.refinementState && (
+          <MessageRefinementIndicator
+            refinementState={message.refinementState}
+          />
+        )}
+
+        {/* Answer content with subtle pulse during refinement */}
+        <div
+          className={
+            isRefining
+              ? "animate-pulse rounded-lg border border-primary/20 bg-primary/5 p-1 -m-1"
+              : undefined
           }
-          return (
-            <MessageResponse
-              key={
-                citationComponents
-                  ? `cited-${message.id}-${i}`
-                  : `${message.id}-${i}`
-              }
-              components={citationComponents}
-              refinementState={message.refinementState}
-            >
-              {part.text}
-            </MessageResponse>
-          );
-        })}
+        >
+          {message.parts.map((part, i) => {
+            if (part.type !== "text") {
+              return null;
+            }
+            return (
+              <MessageResponse
+                key={
+                  citationComponents
+                    ? `cited-${message.id}-${i}`
+                    : `${message.id}-${i}`
+                }
+                components={citationComponents}
+                refinementState={message.refinementState}
+              >
+                {part.text}
+              </MessageResponse>
+            );
+          })}
+        </div>
+
         {message.role === "assistant" && !!message.sources?.length && (
           <MessageSources sources={message.sources} />
         )}
