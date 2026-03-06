@@ -46,6 +46,7 @@ import { authClient } from "@/lib/auth/client";
 import { GoogleSsoButton } from "./auth/google-sso-button";
 import { UserMenu } from "./auth/user-menu";
 import { Separator } from "./ui/separator";
+import { FeedbackDialog } from "./feedback-dialog";
 
 // Menu items for Telkom University Research Directory
 const items = [
@@ -275,6 +276,7 @@ export function AppSidebar() {
           </div>
         ) : isAuthenticated ? (
           <div className="flex flex-col gap-2">
+            <FeedbackDialog />
             <UserMenu />
             <Separator className="my-1" />
             <p className="text-xs text-muted-foreground text-center">
@@ -284,6 +286,7 @@ export function AppSidebar() {
         ) : (
           <div className="flex flex-col gap-2">
             <GoogleSsoButton />
+            <FeedbackDialog />
             <p className="text-xs text-muted-foreground text-center">
               "Knowledge doesn't wait to be found. It waits to be asked."
             </p>
