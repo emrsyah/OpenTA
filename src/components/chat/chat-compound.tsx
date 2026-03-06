@@ -29,7 +29,10 @@ import {
   PromptInputAttachmentsDisplay,
   SourceSelector,
 } from "@/components/chat";
+import { ActiveFilterTags } from "./active-filter-tags";
 import { ChatProvider, useChatContext } from "./chat-provider";
+import { FilterPanel } from "./filter-panel";
+import { QuickFilterChips } from "./quick-filter-chips";
 
 // ─── Chat.Frame ───────────────────────────────────────────────────────────────
 
@@ -119,16 +122,36 @@ export function ChatWebSearchToggle() {
 
 export function ChatInputArea() {
   const { state, actions } = useChatContext();
-  const { status, sourceTypes } = state;
-  const { sendMessage, setSourceTypes } = actions;
+  const { status, sourceTypes, filters } = state;
+  const { sendMessage, setSourceTypes, setFilters, clearFilters } = actions;
 
   const handleSubmit = (message: any) => {
     if (!message.text && !message.files?.length) return;
     sendMessage(message.text, message.files);
   };
 
+  const hasActiveFilters = !!(
+    filters.catalogType ||
+    filters.yearFrom ||
+    filters.yearTo ||
+    filters.author ||
+    filters.hasElectronicAccess
+  );
+
   return (
     <div className="py-3 max-w-5xl mx-auto w-full">
+      {/* Active Filter Tags */}
+      {/* {hasActiveFilters && (
+        <div className="mb-3">
+          <ActiveFilterTags filters={filters} onChange={setFilters} />
+        </div>
+      )} */}
+
+      {/* Quick Filter Chips */}
+      {/* <div className="mb-3">
+        <QuickFilterChips filters={filters} onChange={setFilters} />
+      </div> */}
+
       <PromptInput
         onSubmit={handleSubmit}
         className="w-full"
@@ -143,6 +166,11 @@ export function ChatInputArea() {
         </PromptInputBody>
         <PromptInputFooter>
           <PromptInputTools>
+            <FilterPanel
+              filters={filters}
+              onChange={setFilters}
+              onClear={clearFilters}
+            />
             {/* <PromptInputActionMenu>
               <PromptInputActionMenuTrigger />
               <PromptInputActionMenuContent>

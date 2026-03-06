@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { generateBackendToken } from "@/lib/auth/backend-jwt";
 
-// Allow streaming responses up to 30 seconds
-export const maxDuration = 30;
+// Allow streaming responses up to 300 seconds (complex research queries can take 60s+)
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { messages, conversationId, model, webSearch } = body;
+    const { messages, conversationId, model, webSearch, filters } = body;
 
     // Get the last user message
     const lastMessage = messages?.[messages.length - 1];
@@ -57,12 +58,19 @@ export async function POST(req: NextRequest) {
       req.headers.get("Accept-Language")?.split(",")[0] || "id-ID";
     const timezone = req.headers.get("X-Timezone") || "Asia/Jakarta";
     const sourcePreference = webSearch ? "all" : "only_papers";
+    // Generate JWT for backend authentication
+    const backendToken = await generateBackendToken({
+      id: session.user.id,
+      email: session.user.email,
+      name: session.user.name,
+    });
 
-    // Proxy the request to the backend agent with new API structure
-    const response = await fetch(`${backendUrl}/chat/basic`, {
+    // Proxy the request to the backend agent with JWT authentication
+    const response = await fetch(`${backendUrl}/chat/new`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${backendToken}`, // JWT for user verification
       },
       body: JSON.stringify({
         query,
@@ -75,6 +83,12 @@ export async function POST(req: NextRequest) {
           conversation_id: conversationId,
           is_incognito: false,
           attachments: [],
+          ...(filters?.catalogType && { catalog_type: filters.catalogType }),
+          ...(filters?.yearFrom && { year_from: filters.yearFrom }),
+          ...(filters?.yearTo && { year_to: filters.yearTo }),
+          ...(filters?.author && { author: filters.author }),
+          ...(filters?.hasElectronicAccess !== undefined && { has_electronic_access: filters.hasElectronicAccess }),
+          // Note: user_id is extracted from JWT by Python backend, not sent in body
         },
       }),
     });
@@ -131,42 +145,42 @@ export async function POST(req: NextRequest) {
                 continue;
               }
 
-               try {
-                 const parsed = JSON.parse(data);
+              try {
+                const parsed = JSON.parse(data);
 
-                 if (parsed.type === "simple_thinking") {
-                   controller.enqueue(
-                     encoder.encode(
-                       JSON.stringify({
-                         type: "simple_thinking",
-                         message: parsed.message,
-                       }) + "\n",
-                     ),
-                   );
-                 } else if (parsed.type === "acknowledgment") {
-                   controller.enqueue(
-                     encoder.encode(
-                       JSON.stringify({
-                         type: "acknowledgment",
-                         content: parsed.content,
-                       }) + "\n",
-                     ),
-                   );
-                 } else if (parsed.type === "status") {
-                   controller.enqueue(
-                     encoder.encode(
-                       JSON.stringify({
-                         type: "status",
-                         step: parsed.step,
-                         message: parsed.message,
-                       }) + "\n",
-                     ),
-                   );
-                 } else if (parsed.type === "plan") {
+                if (parsed.type === "simple_thinking") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "simple_thinking",
+                        message: parsed.message,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "acknowledgment") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "acknowledgment",
+                        content: parsed.content,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "status") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "status",
+                        step: parsed.step,
+                        message: parsed.message,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "plan") {
                   controller.enqueue(
                     encoder.encode(
                       JSON.stringify({ type: "plan", steps: parsed.steps }) +
-                        "\n",
+                      "\n",
                     ),
                   );
                 } else if (parsed.type === "step_start") {
@@ -225,6 +239,27 @@ export async function POST(req: NextRequest) {
                         type: "step_done",
                         step_id: parsed.step_id,
                       }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "thinking_start") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({ type: "thinking_start" }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "thinking_token" && parsed.content) {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "thinking_token",
+                        content: parsed.content,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "thinking_end") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({ type: "thinking_end" }) + "\n",
                     ),
                   );
                 } else if (parsed.type === "answer_start") {

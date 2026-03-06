@@ -25,14 +25,14 @@ FilterBar.Search = function FilterBarSearch() {
   const { state, actions } = useFilters();
 
   return (
-    <div className="col-span-2 relative group">
+    <div className="relative group flex-1 min-w-[200px]">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
       <Input
         type="text"
         placeholder="Search title, author, subject..."
         value={state.search}
         onChange={(e) => actions.setSearch(e.target.value)}
-        className="pl-9 h-9 text-xs border-muted-foreground/20 focus-visible:ring-primary/20 bg-background/50 hover:bg-background transition-colors"
+        className="pl-9 h-9 text-xs border-muted-foreground/20 focus-visible:ring-primary/20 bg-background/50 hover:bg-background transition-colors w-full"
       />
     </div>
   );
@@ -44,7 +44,7 @@ FilterBar.Type = function FilterBarType() {
 
   return (
     <Select value={state.catalogType} onValueChange={actions.setCatalogType}>
-      <SelectTrigger className="h-9 bg-background/50 hover:bg-background border-muted-foreground/20 transition-colors">
+      <SelectTrigger className="h-9 min-w-[140px] flex-1 bg-background/50 hover:bg-background border-muted-foreground/20 transition-colors">
         <div className="flex items-center gap-1.5 overflow-hidden">
           <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           <span className="truncate text-xs">
@@ -71,10 +71,10 @@ FilterBar.YearRange = function FilterBarYearRange() {
   const { state, actions } = useFilters();
 
   return (
-    <>
+    <div className="flex gap-2 flex-1 min-w-[200px]">
       {/* Year From */}
       <Select value={state.yearFrom} onValueChange={actions.setYearFrom}>
-        <SelectTrigger className="h-9 bg-background/50 hover:bg-background border-muted-foreground/20 transition-colors text-xs">
+        <SelectTrigger className="h-9 min-w-[100px] flex-1 bg-background/50 hover:bg-background border-muted-foreground/20 transition-colors text-xs">
           <SelectValue placeholder="From" />
         </SelectTrigger>
         <SelectContent>
@@ -89,7 +89,7 @@ FilterBar.YearRange = function FilterBarYearRange() {
 
       {/* Year To */}
       <Select value={state.yearTo} onValueChange={actions.setYearTo}>
-        <SelectTrigger className="h-9 bg-background/50 hover:bg-background border-muted-foreground/20 transition-colors text-xs">
+        <SelectTrigger className="h-9 min-w-[100px] flex-1 bg-background/50 hover:bg-background border-muted-foreground/20 transition-colors text-xs">
           <SelectValue placeholder="To" />
         </SelectTrigger>
         <SelectContent>
@@ -101,7 +101,7 @@ FilterBar.YearRange = function FilterBarYearRange() {
           ))}
         </SelectContent>
       </Select>
-    </>
+    </div>
   );
 };
 

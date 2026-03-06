@@ -17,7 +17,7 @@ import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, CopyIcon } from "lucide-react";
 import {
   createContext,
   memo,
@@ -377,3 +377,57 @@ export const MessageToolbar = ({
     {children}
   </div>
 );
+
+// ─── Message Copy Button ───────────────────────────────────────────────────────
+
+export interface MessageCopyButtonProps {
+  content: string;
+  className?: string;
+}
+
+/**
+ * Copy button for message content with tooltip and visual feedback
+ * Shows copy icon by default, checkmark when copied
+ */
+export function MessageCopyButton({
+  content,
+  className,
+}: MessageCopyButtonProps) {
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Reset after 2 seconds
+      timeoutRef.current = setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <MessageAction
+      tooltip={copied ? "Copied!" : "Copy to clipboard"}
+      onClick={handleCopy}
+      variant="ghost"
+      size="icon-sm"
+      className={cn(
+        "opacity-0 group-hover:opacity-100 transition-opacity",
+        copied && "opacity-100 text-green-600 dark:text-green-400",
+        className,
+      )}
+    >
+      {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+    </MessageAction>
+  );
+}

@@ -3,6 +3,7 @@
 import type { ChatStatus } from "ai";
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { ChatFilters } from "@/components/chat/chat-filter-types";
 
 export type MessageRole = "user" | "assistant";
 
@@ -55,6 +56,7 @@ export interface ChatMessage {
   planSteps?: PlanStep[];
   answerStarted?: boolean;
   isThinking?: boolean;
+  thinkingContent?: string;   // accumulated CoT reasoning trace
   acknowledgment?: string;
   citationAudit?: CitationAuditResult;
   refinementState?: RefinementState;
@@ -74,6 +76,7 @@ interface DbMessage {
 interface UseStreamingChatOptions {
   conversationId?: string;
   api?: string;
+  filters?: ChatFilters;
   onConversationCreated?: (conversationId: string) => void;
   onTitleGenerated?: (conversationId: string, title: string) => void;
 }
@@ -152,6 +155,7 @@ export function useStreamingChat(options?: UseStreamingChatOptions) {
   const {
     conversationId,
     api = "/api/chat",
+    filters,
     onConversationCreated,
     onTitleGenerated,
   } = options || {};
@@ -376,6 +380,30 @@ export function useStreamingChat(options?: UseStreamingChatOptions) {
                     ...msg,
                     answerStarted: true,
                     isThinking: false, // Ensure thinking stops when answer starts
+                  }));
+                  break;
+
+                case "thinking_start":
+                  // CoT is about to generate a reasoning trace before the answer.
+                  // Keep the message in thinking state — reasoning_tokens will follow.
+                  updateAssistant((msg) => ({ ...msg, isThinking: true }));
+                  break;
+
+                case "thinking_token":
+                  // Accumulate CoT reasoning tokens (shown in a collapsible block)
+                  updateAssistant((msg) => ({
+                    ...msg,
+                    thinkingContent: (msg.thinkingContent ?? "") + event.content,
+                  }));
+                  break;
+
+                case "thinking_end":
+                  // Reasoning trace is done — answer tokens or done event follows.
+                  // Mark answerStarted so the answer area renders now, not just on first token.
+                  updateAssistant((msg) => ({
+                    ...msg,
+                    isThinking: false,
+                    answerStarted: true,
                   }));
                   break;
 

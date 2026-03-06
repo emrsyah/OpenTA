@@ -14,6 +14,15 @@ export async function getAllConversations(limit = 50) {
     .orderBy(desc(conversations.updatedAt))
     .limit(limit);
 }
+export async function getConversationsByUserId(userId: string, limit = 50) {
+  return db
+    .select()
+    .from(conversations)
+    .where(eq(conversations.userId, userId))
+    .orderBy(desc(conversations.updatedAt))
+    .limit(limit);
+}
+
 
 export async function getConversationById(id: string) {
   const result = await db
@@ -33,8 +42,9 @@ export async function getMessagesByConversationId(conversationId: string) {
     .orderBy(messages.createdAt);
 }
 
-export async function createConversation(data: NewConversation) {
-  const result = await db.insert(conversations).values(data).returning();
+// Create a conversation with required userId
+export async function createConversation(data: Omit<NewConversation, 'userId'> & { userId: string }) {
+  const result = await db.insert(conversations).values(data as NewConversation).returning();
   return result[0];
 }
 

@@ -14,50 +14,52 @@ export const contentType = "image/png";
 
 // Image generation
 export default async function Image() {
+  // In Edge Runtime, fetch the logo and convert to base64 data URI
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+  let logoSrc: string | null = null;
+  try {
+    const logoResponse = await fetch(
+      new URL("/favicon/android-chrome-512x512.png", baseUrl).toString(),
+    );
+    const logoBuffer = await logoResponse.arrayBuffer();
+    const logoBase64 = Buffer.from(logoBuffer).toString("base64");
+    logoSrc = `data:image/png;base64,${logoBase64}`;
+  } catch (error) {
+    // Fallback: no logo if fetch fails
+    console.error("Failed to fetch logo:", error);
+  }
   return new ImageResponse(
-    // ImageResponse JSX element
-    <div
-      style={{
-        fontSize: 128,
-        background: "white",
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "sans-serif",
-      }}
-    >
+    logoSrc ? (
+      /* biome-ignore lint/performance/noImgElement: ImageResponse requires standard img tag */
+      <img
+        src={logoSrc}
+        alt="Open TA Logo"
+        width={size.width}
+        height={size.height}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+        }}
+      />
+    ) : (
+      // Fallback if logo fails to load
       <div
         style={{
+          width: "100%",
+          height: "100%",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: "20px",
+          fontSize: 48,
+          fontWeight: 700,
+          color: "#1a1a1a",
         }}
       >
-        <div
-          style={{
-            fontSize: 64,
-            fontWeight: 900,
-            letterSpacing: "-0.05em",
-          }}
-        >
-          Open TA Telyu
-        </div>
-        <div
-          style={{
-            fontSize: 32,
-            fontWeight: 400,
-            color: "#666",
-          }}
-        >
-          Telkom University Alumni Research Repository
-        </div>
+        Open TA
       </div>
-    </div>,
+    ),
     // ImageResponse options
     {
       // For convenience, we can re-use the exported opengraph-image
