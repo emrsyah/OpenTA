@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Proxy the request to the backend agent with JWT authentication
-    const response = await fetch(`${backendUrl}/chat/basic`, {
+    const response = await fetch(`${backendUrl}/chat/new`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
