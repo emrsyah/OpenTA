@@ -19,6 +19,9 @@ export { PromptInputAttachmentsDisplay } from "./prompt-input-attachments-displa
 export { QuickFilterChips } from "./quick-filter-chips";
 export { SourceSelector } from "./source-selector";
 
+// Re-export from ai-elements for convenience
+export { MessageCopyButton } from "@/components/ai-elements/message";
+
 // Filter types
 export type {
   CatalogType,

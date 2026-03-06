@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import {
   Message,
   MessageContent,
+  MessageCopyButton,
   MessageResponse,
 } from "@/components/ai-elements/message";
 import type {
@@ -19,6 +20,26 @@ interface MessageEntryProps {
   isStreaming: boolean;
 }
 
+/**
+ * Extract plain text content from message parts for copying
+ */
+function extractTextContent(message: ChatMessageType): string {
+  const texts: string[] = [];
+  
+  // Add acknowledgment if present (assistant messages)
+  if (message.acknowledgment) {
+    texts.push(message.acknowledgment);
+  }
+  
+  // Add all text parts
+  for (const part of message.parts) {
+    if (part.type === "text") {
+      texts.push(part.text);
+    }
+  }
+  
+  return texts.join("\n\n");
+}
 /**
  * Process children to handle citations in markdown content
  * This replaces citation markers with CitationHoverCard components
@@ -150,6 +171,9 @@ export function MessageEntry({ message, isStreaming }: MessageEntryProps) {
     return makeCitationComponents(sourceMap, message.citationAudit);
   }, [message.sources, message.citationAudit]);
 
+  // Extract text for copy button
+  const textContent = useMemo(() => extractTextContent(message), [message]);
+
   return (
     <Message from={message.role}>
       <MessageContent>
@@ -185,6 +209,12 @@ export function MessageEntry({ message, isStreaming }: MessageEntryProps) {
           <MessageSources sources={message.sources} />
         )}
       </MessageContent>
+      {/* Copy button - only show when not streaming */}
+      {!isStreaming && textContent && (
+        <div className="flex justify-end mt-1">
+          <MessageCopyButton content={textContent} />
+        </div>
+      )}
     </Message>
   );
 }
