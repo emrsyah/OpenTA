@@ -168,7 +168,7 @@ function groupPapersByLecturer(
       return {
         name,
         paperCount: data.papers.length,
-        relevanceScore: data.relevanceScore,
+        relevanceScore: searchMethod === "vector" ? data.avgSimilarity : data.relevanceScore,
         searchMethod,
         stats,
         topPapers: data.papers.slice(0, 3).map((p) => ({

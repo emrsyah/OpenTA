@@ -174,7 +174,7 @@ export default function CariDosenPage() {
                   placeholder="Masukkan topik penelitianmu..."
                   defaultValue={topic}
                   onChange={debouncedSearch}
-                  className="pl-12 pr-32 py-6 text-lg rounded-xl border-2 border-border/50 focus:border-primary transition-colors"
+                  className="pl-12 pr-[180px] py-6 text-lg rounded-xl border-2 border-border/50 focus:border-primary transition-colors"
                 />
                 <Button
                   type="submit"

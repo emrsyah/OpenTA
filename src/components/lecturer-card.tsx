@@ -5,25 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-interface LecturerResult {
-  name: string;
-  paperCount: number;
-  relevanceScore: number;
-  searchMethod?: "vector" | "fulltext";
-  stats: {
-    totalPapers: number;
-    yearRange: { min: number | null; max: number | null };
-    subjects: string[];
-  };
-  topPapers: Array<{
-    id: number;
-    title: string;
-    author: string | null;
-    publicationYear: number | null;
-    abstract: string | null;
-    subject: string | null;
-  }>;
-}
+import { LecturerResult } from "@/types/lecturer";
 
 interface LecturerCardProps {
   lecturer: LecturerResult;
@@ -34,8 +16,8 @@ export function LecturerCard({ lecturer, onViewDetail }: LecturerCardProps) {
   const { name, paperCount, stats, topPapers } = lecturer;
 
   // Calculate relevance percentage
-  const relevancePercent = lecturer.relevanceScore
-    ? Math.round(lecturer.relevanceScore * 100)
+  const relevancePercent = lecturer.searchMethod === "vector"
+    ? Math.min(99, Math.round(lecturer.relevanceScore * 100))
     : Math.min(95, Math.max(50, Math.round((paperCount / 15) * 100)));
 
   return (
