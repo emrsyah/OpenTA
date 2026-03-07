@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,45 +34,39 @@ export default function LecturerDetailPage() {
   const router = useRouter();
   const name = decodeURIComponent(params.name as string);
 
-  const [data, setData] = useState<DetailResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [webSearchExpanded, setWebSearchExpanded] = useState(false);
-  const [webSearchLoading, setWebSearchLoading] = useState(false);
-  const [webSearchResults, setWebSearchResults] = useState<WebSearchResponse | null>(null);
-  const [webSearchError, setWebSearchError] = useState<string | null>(null);
+  const [shouldWebSearch, setShouldWebSearch] = useState(false);
 
-  const fetchLecturerData = useCallback(async (page: number) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams({
-        name: name,
-        page: page.toString(),
-        limit: "10",
-      });
-
-      const response = await fetch(`/api/lecturers/detail?${params}`);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch lecturer details");
-      }
-
-      const result: DetailResponse = await response.json();
-      setData(result);
-    } catch (err) {
-      console.error("Fetch error:", err);
-      setError("Terjadi kesalahan saat memuat data dosen.");
-    } finally {
-      setIsLoading(false);
+  // SWR fetcher
+  const fetcher = async (url: string) => {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error("Gagal memuat data");
     }
-  }, [name]);
+    return res.json();
+  };
 
-  useEffect(() => {
-    fetchLecturerData(currentPage);
-  }, [currentPage, fetchLecturerData]);
+  // SWR for lecturer details
+  const detailKey = `/api/lecturers/detail?name=${encodeURIComponent(name)}&page=${currentPage}&limit=10`;
+  const { data, error, isLoading } = useSWR<DetailResponse>(
+    detailKey,
+    fetcher,
+    { revalidateOnFocus: false }
+  );
+
+  // SWR for web search (conditionally enabled)
+  const webSearchKey = shouldWebSearch
+    ? `/api/lecturers/web-search?name=${encodeURIComponent(name)}`
+    : null;
+  const {
+    data: webSearchResults,
+    error: webSearchError,
+    isLoading: webSearchLoading,
+  } = useSWR<WebSearchResponse>(webSearchKey, fetcher, {
+    revalidateOnFocus: false,
+    revalidateIfStale: false,
+  });
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && data && newPage <= data.pagination.totalPages) {
@@ -80,27 +75,8 @@ export default function LecturerDetailPage() {
     }
   };
 
-  const handleWebSearch = async () => {
-    if (webSearchLoading || webSearchResults) return;
-
-    setWebSearchLoading(true);
-    setWebSearchError(null);
-
-    try {
-      const response = await fetch(`/api/lecturers/web-search?name=${encodeURIComponent(name)}`);
-
-      if (!response.ok) {
-        throw new Error("Failed to search lecturer information");
-      }
-
-      const data: WebSearchResponse = await response.json();
-      setWebSearchResults(data);
-    } catch (err) {
-      console.error("Web search error:", err);
-      setWebSearchError("Gagal mencari informasi dosen di internet.");
-    } finally {
-      setWebSearchLoading(false);
-    }
+  const handleWebSearch = () => {
+    setShouldWebSearch(true);
   };
 
   if (isLoading) {
@@ -121,7 +97,7 @@ export default function LecturerDetailPage() {
           </Button>
           <Card className="p-12 text-center">
             <p className="text-destructive">
-              {error || "Data tidak ditemukan"}
+              {error?.message || "Data tidak ditemukan"}
             </p>
           </Card>
         </div>
@@ -236,7 +212,7 @@ export default function LecturerDetailPage() {
               isExpanded={webSearchExpanded}
               onToggle={() => setWebSearchExpanded(!webSearchExpanded)}
               isLoading={webSearchLoading}
-              results={webSearchResults}
+              results={webSearchResults ?? null}
               error={webSearchError}
               onSearch={handleWebSearch}
             />
@@ -404,7 +380,7 @@ function WebSearchCard({
   onToggle: () => void;
   isLoading: boolean;
   results: WebSearchResponse | null;
-  error: string | null;
+  error: Error | null;
   onSearch: () => void;
 }) {
   return (
@@ -457,7 +433,7 @@ function WebSearchCard({
           {/* Error State */}
           {error && (
             <div className="py-4 text-center">
-              <p className="text-sm text-destructive">{error}</p>
+              <p className="text-sm text-destructive">{error.message}</p>
               <Button variant="outline" size="sm" onClick={onSearch} className="mt-2">
                 Coba Lagi
               </Button>
