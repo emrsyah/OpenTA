@@ -54,7 +54,7 @@ FilterBar.Type = function FilterBarType() {
           </span>
         </div>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent position="popper" sideOffset={4} className="z-[100]">
         <SelectItem value="all">All Catalog Types</SelectItem>
         {CATALOG_TYPES.slice(1).map((type) => (
           <SelectItem key={type} value={type}>
@@ -71,14 +71,15 @@ FilterBar.YearRange = function FilterBarYearRange() {
   const { state, actions } = useFilters();
 
   return (
-    <div className="flex gap-2 flex-1 min-w-[200px]">
+    <div className="flex items-center flex-1 min-w-[200px]">
       {/* Year From */}
       <Select value={state.yearFrom} onValueChange={actions.setYearFrom}>
-        <SelectTrigger className="h-9 min-w-[100px] flex-1 bg-background/50 hover:bg-background border-muted-foreground/20 transition-colors text-xs">
-          <SelectValue placeholder="From" />
+        <SelectTrigger className="h-9 min-w-[90px] flex-1 rounded-r-none bg-background/50 hover:bg-background border-r-0 border-muted-foreground/20 transition-colors text-xs">
+          <span className="text-muted-foreground mr-1">From:</span>
+          <SelectValue placeholder="Any" />
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="any">From: Any</SelectItem>
+        <SelectContent position="popper" sideOffset={4} className="z-[100]">
+          <SelectItem value="any">Any</SelectItem>
           {YEARS.map((year) => (
             <SelectItem key={year} value={year.toString()}>
               {year}
@@ -89,11 +90,12 @@ FilterBar.YearRange = function FilterBarYearRange() {
 
       {/* Year To */}
       <Select value={state.yearTo} onValueChange={actions.setYearTo}>
-        <SelectTrigger className="h-9 min-w-[100px] flex-1 bg-background/50 hover:bg-background border-muted-foreground/20 transition-colors text-xs">
-          <SelectValue placeholder="To" />
+        <SelectTrigger className="h-9 min-w-[90px] flex-1 rounded-l-none bg-background/50 hover:bg-background border-muted-foreground/20 transition-colors text-xs">
+          <span className="text-muted-foreground mr-1">To:</span>
+          <SelectValue placeholder="Any" />
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="any">To: Any</SelectItem>
+        <SelectContent position="popper" sideOffset={4} className="z-[100]">
+          <SelectItem value="any">Any</SelectItem>
           {YEARS.map((year) => (
             <SelectItem key={year} value={year.toString()}>
               {year}
@@ -129,7 +131,7 @@ FilterBar.Subject = function FilterBarSubject({
           </span>
         </div>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent position="popper" sideOffset={4} className="z-[100]">
         <SelectItem value="all">Every Subject</SelectItem>
         {availableSubjects.slice(0, 50).map((subj) => (
           <SelectItem key={subj} value={subj}>
@@ -161,7 +163,7 @@ FilterBar.Editor = function FilterBarEditor({
           </span>
         </div>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent position="popper" sideOffset={4} className="z-[100]">
         <SelectItem value="all">All Lecturers</SelectItem>
         {availableEditors.length > 0 ? (
           availableEditors.slice(0, 50).map((editor) => (
@@ -171,7 +173,7 @@ FilterBar.Editor = function FilterBarEditor({
           ))
         ) : (
           <SelectItem value="loading" disabled>
-            Type to search lecturers...
+            No lecturers available
           </SelectItem>
         )}
       </SelectContent>

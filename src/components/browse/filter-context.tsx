@@ -15,10 +15,10 @@ export const CATALOG_TYPES = [
   "Proceeding ( Electronic )",
 ] as const;
 
-// Hoisted outside component to prevent recreation on every render
+// Fixed year range from 2020 to 2026
 export const YEARS: readonly number[] = Array.from(
-  { length: 30 },
-  (_, i) => new Date().getFullYear() - i,
+  { length: 7 },
+  (_, i) => 2020 + i,
 );
 
 export const SORT_OPTIONS = [
