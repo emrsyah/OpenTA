@@ -20,11 +20,11 @@ export function UserMenu() {
   const user = session.user;
   const initials = user.name
     ? user.name
-        .split(" ")
-        .map((n: string) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+      .split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
     : user.email?.[0].toUpperCase() || "?";
 
   const handleSignOut = async () => {
@@ -35,7 +35,7 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 p-2 hover:bg-accent transition-colors">
+        <button type="button" className="flex items-center justify-center gap-2 p-2 hover:bg-accent transition-colors w-full">
           <Avatar className="h-8 w-8">
             <AvatarImage
               src={user.image || undefined}
@@ -45,7 +45,7 @@ export function UserMenu() {
               {initials}
             </AvatarFallback>
           </Avatar>
-          <div className="text-left hidden md:block">
+          <div className="text-left md:block group-data-[collapsible=icon]:hidden">
             <p className="text-sm font-medium leading-none">
               {user.name || "User"}
             </p>
