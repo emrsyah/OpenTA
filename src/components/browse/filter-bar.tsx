@@ -1,6 +1,6 @@
 "use client";
 
-import { Filter, Search, Tag } from "lucide-react";
+import { Filter, Search, Tag, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -54,7 +54,7 @@ FilterBar.Type = function FilterBarType() {
           </span>
         </div>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent position="popper" sideOffset={4} className="z-[100]">
         <SelectItem value="all">All Catalog Types</SelectItem>
         {CATALOG_TYPES.slice(1).map((type) => (
           <SelectItem key={type} value={type}>
@@ -71,14 +71,15 @@ FilterBar.YearRange = function FilterBarYearRange() {
   const { state, actions } = useFilters();
 
   return (
-    <div className="flex gap-2 flex-1 min-w-[200px]">
+    <div className="flex items-center flex-1 min-w-[200px]">
       {/* Year From */}
       <Select value={state.yearFrom} onValueChange={actions.setYearFrom}>
-        <SelectTrigger className="h-9 min-w-[100px] flex-1 bg-background/50 hover:bg-background border-muted-foreground/20 transition-colors text-xs">
-          <SelectValue placeholder="From" />
+        <SelectTrigger className="h-9 min-w-[90px] flex-1 rounded-r-none bg-background/50 hover:bg-background border-r-0 border-muted-foreground/20 transition-colors text-xs">
+          <span className="text-muted-foreground mr-1">From:</span>
+          <SelectValue placeholder="Any" />
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="any">From: Any</SelectItem>
+        <SelectContent position="popper" sideOffset={4} className="z-[100]">
+          <SelectItem value="any">Any</SelectItem>
           {YEARS.map((year) => (
             <SelectItem key={year} value={year.toString()}>
               {year}
@@ -89,11 +90,12 @@ FilterBar.YearRange = function FilterBarYearRange() {
 
       {/* Year To */}
       <Select value={state.yearTo} onValueChange={actions.setYearTo}>
-        <SelectTrigger className="h-9 min-w-[100px] flex-1 bg-background/50 hover:bg-background border-muted-foreground/20 transition-colors text-xs">
-          <SelectValue placeholder="To" />
+        <SelectTrigger className="h-9 min-w-[90px] flex-1 rounded-l-none bg-background/50 hover:bg-background border-muted-foreground/20 transition-colors text-xs">
+          <span className="text-muted-foreground mr-1">To:</span>
+          <SelectValue placeholder="Any" />
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="any">To: Any</SelectItem>
+        <SelectContent position="popper" sideOffset={4} className="z-[100]">
+          <SelectItem value="any">Any</SelectItem>
           {YEARS.map((year) => (
             <SelectItem key={year} value={year.toString()}>
               {year}
@@ -129,13 +131,51 @@ FilterBar.Subject = function FilterBarSubject({
           </span>
         </div>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent position="popper" sideOffset={4} className="z-[100]">
         <SelectItem value="all">Every Subject</SelectItem>
         {availableSubjects.slice(0, 50).map((subj) => (
           <SelectItem key={subj} value={subj}>
             {subj}
           </SelectItem>
         ))}
+      </SelectContent>
+    </Select>
+  );
+};
+
+// Editor (Lecturer) Filter Component
+interface FilterBarEditorProps {
+  availableEditors?: string[];
+}
+
+FilterBar.Editor = function FilterBarEditor({
+  availableEditors = [],
+}: FilterBarEditorProps) {
+  const { state, actions } = useFilters();
+
+  return (
+    <Select value={state.editor} onValueChange={actions.setEditor}>
+      <SelectTrigger className="h-8 w-[180px] sm:w-[200px] bg-background/30 hover:bg-background border-muted-foreground/15 text-[11px] font-medium">
+        <div className="flex items-center gap-1.5 overflow-hidden">
+          <User className="w-3 h-3 text-muted-foreground shrink-0" />
+          <span className="truncate">
+            {state.editor === "all" ? "All Lecturers" : state.editor}
+          </span>
+        </div>
+      </SelectTrigger>
+      <SelectContent position="popper" sideOffset={4} className="z-[100]">
+        <SelectItem value="all">All Lecturers</SelectItem>
+        {availableEditors.length > 0 ? (
+          availableEditors.slice(0, 50).map((editor) => (
+            <SelectItem key={editor} value={editor}>
+              {editor}
+            </SelectItem>
+          ))
+        ) : (
+          <SelectItem value="loading" disabled>
+            No lecturers available
+          </SelectItem>
+        )}
       </SelectContent>
     </Select>
   );

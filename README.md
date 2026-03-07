@@ -10,9 +10,11 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?style=flat-square&logo=tailwind-css)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-4169E1?style=flat-square&logo=postgresql)
 ![DSPy](https://img.shields.io/badge/DSPy-Framework-orange?style=flat-square)
+![Voyage AI](https://img.shields.io/badge/Voyage_AI-Embeddings-8B5CF6?style=flat-square)
+![Exa AI](https://img.shields.io/badge/Exa_AI-Web_Search-10B981?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
-An agent-native research workspace that helps you discover, analyze, and synthesize academic papers from Telkom University alumni.
+An agent-native research workspace that helps you discover papers, find lecturers, and synthesize knowledge from Telkom University's academic community.
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [Contributing](#-contributing)
 
@@ -25,6 +27,7 @@ An agent-native research workspace that helps you discover, analyze, and synthes
 OpenTA is an **AI-powered co-researcher** designed to accelerate academic research. Unlike traditional paper repositories, this is an **agent-native workspace** where AI agents actively help you:
 
 - 🔍 **Discover** relevant papers from Telkom University's vast research database
+- 👨‍🏫 **Find Lecturers** with AI-powered semantic search and web-enriched profiles
 - 🧠 **Synthesize** knowledge across multiple papers and sources
 - 🔬 **Run deep research** tasks with autonomous agents that can perform multi-step investigations
 - 📊 **Generate insights** through context engineering and agent harness patterns
@@ -43,6 +46,9 @@ To create an AI research assistant that doesn't just retrieve papers, but **acti
 |---------|-------------|--------|
 | **AI Research Assistant** | DSPy-powered agents for research queries | ✅ Implemented |
 | **Paper Discovery** | Search Tel-U alumni papers with semantic search | ✅ Implemented |
+| **Cari Dosen** | AI-powered lecturer search with Exa web enrichment | ✅ Implemented |
+| **Research Filtering** | Metadata filters for refined research results | ✅ Implemented |
+| **User Feedback Widget** | Collect feedback on AI responses | ✅ Implemented |
 | **Conversation Management** | Persistent research sessions with history | ✅ Implemented |
 | **Source Citations** | Inline citations with paper metadata | ✅ Implemented |
 | **JWT Backend Auth** | Secure auth for DSPy backend service | ✅ Implemented |
@@ -151,6 +157,10 @@ To create an AI research assistant that doesn't just retrieve papers, but **acti
 - **Migrations**: [Drizzle Kit](https://kit.drizzle.team/)
 - **Vector Embeddings**: pgvector for semantic search with [Voyage AI](https://voyageai.com/)
 
+#### External APIs
+- **Voyage AI**: Embedding generation for semantic search (lecturer matching)
+- **Exa AI**: Web search for lecturer profiles and contact information
+
 #### Authentication
 - **Auth Library**: [better-auth 1.4.18](https://www.better-auth.com/)
 - **OAuth**: Google SSO
@@ -214,6 +224,12 @@ BACKEND_API_SECRET=your-backend-api-secret-min-32-chars
 # Google OAuth
 GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Voyage AI (for vector embeddings)
+VOYAGE_API_KEY=your-voyage-api-key
+
+# Exa AI (for web search - lecturer profiles)
+EXA_API_KEY=your-exa-api-key
 ```
 
 Generate secrets with:
@@ -252,12 +268,17 @@ open-ta-telyu/ (Frontend)
 │   ├── app/                    # Next.js App Router pages
 │   │   ├── page.tsx           # Home page (research interface)
 │   │   ├── browse/            # Paper browse page
+│   │   ├── cari-dosen/        # Lecturer search page (Cari Dosen)
+│   │   │   ├── page.tsx       # Main lecturer search
+│   │   │   └── [name]/        # Lecturer detail page
 │   │   ├── [id]/              # Research session page
 │   │   ├── api/               # API routes
 │   │   │   ├── auth/          # better-auth endpoints
 │   │   │   ├── chat/          # Proxy to DSPy backend
 │   │   │   ├── conversations/ # Session CRUD
-│   │   │   └── catalog/       # Paper search
+│   │   │   ├── catalog/       # Paper search
+│   │   │   ├── lecturers/     # Lecturer search & details
+│   │   │   └── feedback/      # User feedback submission
 │   │   ├── layout.tsx         # Root layout
 │   │   └── globals.css        # Global styles
 │   ├── components/            # React components
@@ -265,11 +286,14 @@ open-ta-telyu/ (Frontend)
 │   │   ├── chat/              # Chat/research components
 │   │   ├── browse/            # Browse page components
 │   │   ├── auth/              # Authentication components
-│   │   └── ai-elements/       # AI response elements
+│   │   ├── ai-elements/       # AI response elements
+│   │   └── lecturer-card.tsx  # Lecturer display card
 │   ├── hooks/                 # Custom React hooks
 │   ├── lib/                   # Utility libraries
 │   │   ├── auth/              # Auth utilities (JWT generation)
-│   │   └── db/                # Database functions
+│   │   ├── db/                # Database functions
+│   │   ├── voyage.ts          # Voyage AI embedding client
+│   │   └── lecturer-utils.ts  # Lecturer data utilities
 │   └── db/                    # Database schema
 │       ├── schema/            # Drizzle schema definitions
 │       └── migrations/        # SQL migrations
@@ -320,6 +344,21 @@ open-ta-backend/ (DSPy Agents - Separate Repo)
 | Endpoint | Method | Description | Auth Required |
 |----------|--------|-------------|---------------|
 | `/api/catalog` | POST | Search research papers | ❌ |
+
+### Lecturer Search (Cari Dosen)
+
+| Endpoint | Method | Description | Auth Required |
+|----------|--------|-------------|---------------|
+| `/api/lecturers/list` | GET | List all lecturers | ❌ |
+| `/api/lecturers/search` | POST | Semantic search lecturers | ❌ |
+| `/api/lecturers/detail` | GET | Get lecturer details | ❌ |
+| `/api/lecturers/web-search` | GET | Exa web search for lecturer | ❌ |
+
+### User Feedback
+
+| Endpoint | Method | Description | Auth Required |
+|----------|--------|-------------|---------------|
+| `/api/feedback` | POST | Submit user feedback | ✅ |
 
 ## 🔒 Authentication & Agent Security
 
@@ -390,6 +429,17 @@ open-ta-backend/ (DSPy Agents - Separate Repo)
 - publication_year: smallint
 ```
 
+**feedback** (User Feedback)
+```sql
+- id: serial PK
+- user_id: text FK → user.id
+- conversation_id: varchar(128) FK → conversations.id
+- message_id: integer FK → messages.id
+- rating: smallint  -- 1-5 rating
+- comment: text  -- Optional feedback comment
+- created_at: timestamp
+```
+
 ## 🚢 Deployment
 
 ### Environment Variables (Production)
@@ -410,6 +460,10 @@ BACKEND_API_SECRET=backend-api-secret-min-32-chars
 # Google OAuth (Production)
 GOOGLE_CLIENT_ID=production-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=production-client-secret
+
+# External APIs (for Cari Dosen)
+VOYAGE_API_KEY=your-voyage-api-key
+EXA_API_KEY=your-exa-api-key
 ```
 
 ### Deployment Platforms
@@ -475,7 +529,7 @@ We welcome contributions! Please follow these guidelines:
 ### Development Workflow
 
 1. **Fork** the repository
-2. **Clone** your fork: `git clone https://github.com/yourusername/open-ta-telyu.git`
+2. **Clone** your fork: `git clone https://github.com/emrsyah/open-ta-telyu.git`
 3. **Create** a branch: `git checkout -b feature/your-feature-name`
 4. **Make** your changes
 5. **Test** thoroughly
@@ -520,19 +574,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Inspiration**: DSPy framework, Agent research patterns
 - **Libraries**: [Next.js](https://nextjs.org/), [better-auth](https://www.better-auth.com/), [DSPy](https://github.com/stanfordnlp/dspy), [Drizzle ORM](https://orm.drizzle.team/)
 - **UI Components**: [shadcn/ui](https://ui.shadcn.com/), [Radix UI](https://www.radix-ui.com/)
+- **External APIs**: [Voyage AI](https://voyageai.com/) (embeddings), [Exa AI](https://exa.ai/) (web search)
 - **Research**: Telkom University academic community
 
 ## 🔗 Related Repositories
 
-- **[open-ta-backend](https://github.com/yourusername/open-ta-telyu-dspy)** - DSPy agent implementation
+- **[open-ta-backend](https://github.com/emrsyah/open-ta-agent)** - DSPy agent implementation
 - **[context-engineering](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus)** - Context management system
 - **[agent-harness](https://www.philschmid.de/agent-harness-2026)** - Agent orchestration patterns
 
 ## 📧 Contact
 
 - **Project Maintainer**: [Emirsyah](mailto:muhammademir48@gmail.com)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/open-ta-telyu/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/open-ta-telyu/discussions)
+- **Issues**: [GitHub Issues](https://github.com/emrsyah/open-ta-telyu/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/emrsyah/open-ta-telyu/discussions)
 
 ---
 

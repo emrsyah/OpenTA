@@ -15,10 +15,10 @@ export const CATALOG_TYPES = [
   "Proceeding ( Electronic )",
 ] as const;
 
-// Hoisted outside component to prevent recreation on every render
+// Fixed year range from 2020 to 2026
 export const YEARS: readonly number[] = Array.from(
-  { length: 30 },
-  (_, i) => new Date().getFullYear() - i,
+  { length: 7 },
+  (_, i) => 2020 + i,
 );
 
 export const SORT_OPTIONS = [
@@ -39,6 +39,7 @@ interface FiltersState {
   yearFrom: string;
   yearTo: string;
   subject: string;
+  editor: string;
   sortBy: SortOption;
   viewMode: ViewMode;
 }
@@ -50,6 +51,7 @@ interface FiltersActions {
   setYearFrom: (value: string) => void;
   setYearTo: (value: string) => void;
   setSubject: (value: string) => void;
+  setEditor: (value: string) => void;
   setSortBy: (value: SortOption) => void;
   setViewMode: (value: ViewMode) => void;
   clearFilters: () => void;
@@ -89,6 +91,7 @@ export function FiltersProvider({
   const [yearFrom, setYearFrom] = useState(initialState?.yearFrom ?? "any");
   const [yearTo, setYearTo] = useState(initialState?.yearTo ?? "any");
   const [subject, setSubject] = useState(initialState?.subject ?? "all");
+  const [editor, setEditor] = useState(initialState?.editor ?? "all");
   const [sortBy, setSortBy] = useState<SortOption>(
     initialState?.sortBy ?? "relevance",
   );
@@ -102,6 +105,7 @@ export function FiltersProvider({
     setYearFrom("any");
     setYearTo("any");
     setSubject("all");
+    setEditor("all");
   };
 
   const state: FiltersState = {
@@ -110,6 +114,7 @@ export function FiltersProvider({
     yearFrom,
     yearTo,
     subject,
+    editor,
     sortBy,
     viewMode,
   };
@@ -120,6 +125,7 @@ export function FiltersProvider({
     setYearFrom,
     setYearTo,
     setSubject,
+    setEditor,
     setSortBy,
     setViewMode,
     clearFilters,
@@ -131,6 +137,7 @@ export function FiltersProvider({
       yearFrom !== "any" ||
       yearTo !== "any" ||
       subject !== "all" ||
+      editor !== "all" ||
       search !== "",
   };
 

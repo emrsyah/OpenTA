@@ -82,12 +82,22 @@ const extractSubjects = (items: CatalogItem[]): string[] => {
       .flatMap((item) =>
         item.subject
           ? item.subject
-              .split(/[,;•/]/)
+              .split(new RegExp("[,;•/]"))
               .map((s) => s.trim())
               .filter(Boolean)
           : [],
       )
       .reduce((set, subject) => set.add(subject), new Set<string>()),
+  ).sort();
+};
+
+// Extract unique editors/lecturers from items
+const extractEditors = (items: CatalogItem[]): string[] => {
+  return Array.from(
+    items
+      .map((item) => item.editor)
+      .filter((editor): editor is string => Boolean(editor))
+      .reduce((set, editor) => set.add(editor), new Set<string>()),
   ).sort();
 };
 
@@ -121,6 +131,7 @@ function BrowseContent() {
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [rawItems, setRawItems] = useState<CatalogItem[]>([]);
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
+  const [availableEditors, setAvailableEditors] = useState<string[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
@@ -158,6 +169,8 @@ function BrowseContent() {
           params.append("yearTo", state.yearTo);
         if (state.subject && state.subject !== "all")
           params.append("subject", state.subject);
+        if (state.editor && state.editor !== "all")
+          params.append("editor", state.editor);
 
         const response = await fetch(`/api/catalog?${params}`);
         const data = await response.json();
@@ -180,16 +193,19 @@ function BrowseContent() {
     state.yearFrom,
     state.yearTo,
     state.subject,
+    state.editor,
     pagination.page,
     pagination.limit,
   ]);
 
-  // Sort items and extract subjects whenever raw items change (combined effect)
+  // Sort items and extract subjects and editors whenever raw items change (combined effect)
   useEffect(() => {
     const sorted = sortItems(rawItems, state.sortBy);
     setItems(sorted);
     const subjects = extractSubjects(rawItems);
     setAvailableSubjects(subjects);
+    const editors = extractEditors(rawItems);
+    setAvailableEditors(editors);
   }, [rawItems, state.sortBy]);
 
   const handlePageChange = (newPage: number) => {
@@ -287,9 +303,10 @@ function BrowseContent() {
             <FilterBar.YearRange />
           </div>
 
-          {/* Filters Row 2: Subject, Badges, Results Count */}
+          {/* Filters Row 2: Subject, Editor, Badges, Results Count */}
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <FilterBar.Subject availableSubjects={availableSubjects} />
+            <FilterBar.Editor availableEditors={availableEditors} />
             <ActiveFiltersBadges />
             <ResultsCount
               pagination={pagination}
