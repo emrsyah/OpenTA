@@ -34,6 +34,7 @@ import {
   QuickFilterChips,
 } from "@/components/chat";
 import { SuggestionChips } from "@/components/suggestion-chips";
+import { AnnouncementBanner } from "@/components/announcement-banner";
 import { authClient, signInGoogle } from "@/lib/auth/client";
 
 const PromptInputAttachmentsDisplay = () => {
@@ -144,7 +145,9 @@ export function HomePage() {
   );
 
   return (
-    <div className="flex md:mx-4 flex-col h-[calc(100vh-2rem)]">
+    <>
+      <AnnouncementBanner />
+      <div className="flex md:mx-4 flex-col h-[calc(100vh-2rem)]">
       <Conversation className="flex-1 overflow-hidden">
         <ConversationContent>
           <div className="flex flex-col items-center justify-center h-full px-4 animate-in mt-16 fade-in slide-in-from-bottom-4 duration-1000">
@@ -225,5 +228,6 @@ export function HomePage() {
         </PromptInput>
       </div>
     </div>
+    </>
   );
 }

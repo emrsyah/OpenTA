@@ -1,7 +1,7 @@
+import { and, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
+import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { catalog } from "@/db/schema";
-import { NextResponse } from "next/server";
-import { ilike, and, eq, gte, lte, or, sql } from "drizzle-orm";
 
 export async function GET(request: Request) {
   try {
@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const yearFrom = searchParams.get("yearFrom");
     const yearTo = searchParams.get("yearTo");
     const subject = searchParams.get("subject");
+    const editor = searchParams.get("editor");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const offset = (page - 1) * limit;
@@ -47,6 +48,11 @@ export async function GET(request: Request) {
     // Filter by subject
     if (subject) {
       conditions.push(ilike(catalog.subject, `%${subject}%`));
+    }
+
+    // Filter by editor (lecturer)
+    if (editor) {
+      conditions.push(ilike(catalog.editor, `%${editor}%`));
     }
 
     // Fetch data with filters

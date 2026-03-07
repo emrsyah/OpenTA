@@ -12,16 +12,71 @@ export interface Conversation {
 
 let globalConversations: Conversation[] = [];
 let initialLoading = true;
+let globalOffset = 0;
+let globalHasMore = true;
+const PAGE_SIZE = 20;
 const listeners: Set<() => void> = new Set();
+
+function notifyListeners() {
+  listeners.forEach((listener) => listener());
+}
+
+function mergeConversations(
+  dbConversations: Conversation[],
+  isLoadMore = false,
+) {
+  if (isLoadMore) {
+    // For load more: append to existing, avoid duplicates
+    const existingIds = new Set(globalConversations.map((c) => c.id));
+    const newConvs = dbConversations.filter((c) => !existingIds.has(c.id));
+    globalConversations = [...globalConversations, ...newConvs];
+  } else {
+    // For refresh/initial: merge with optimistic conversations
+    const optimisticIds = new Set(
+      globalConversations.filter((c) => c.title === null).map((c) => c.id),
+    );
+
+    const merged: Conversation[] = [];
+    const seen = new Set<string>();
+
+    // Add DB conversations
+    for (const dbConv of dbConversations) {
+      merged.push(dbConv);
+      seen.add(dbConv.id);
+    }
+
+    // Add optimistic conversations not in DB
+    for (const optConv of globalConversations) {
+      if (optConv.title === null && !seen.has(optConv.id)) {
+        merged.push(optConv);
+      }
+    }
+
+    // Sort by updatedAt (newest first)
+    merged.sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    );
+
+    globalConversations = merged;
+  }
+
+  // Update hasMore based on whether we got a full page
+  globalHasMore = dbConversations.length >= PAGE_SIZE;
+  notifyListeners();
+}
 
 /**
  * Global hook to manage conversations state across components
- * This allows the chat page and sidebar to stay in sync
+ * Supports pagination with load more functionality
  */
 export function useConversations() {
   const [, forceUpdate] = useState({});
   const { data: session, isPending } = authClient.useSession();
   const isAuthenticated = !isPending && session?.user;
+
+  // Local state for UI feedback
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Subscribe to changes
   useEffect(() => {
@@ -36,18 +91,27 @@ export function useConversations() {
     };
   }, []);
 
-  // Fetch conversations on mount (only for authenticated users)
+  // Reset state when auth changes
   useEffect(() => {
     if (!isAuthenticated) {
       globalConversations = [];
+      globalOffset = 0;
+      globalHasMore = true;
       initialLoading = false;
       notifyListeners();
-      return;
     }
+  }, [isAuthenticated]);
+
+  // Fetch conversations on mount
+  useEffect(() => {
+    if (!isAuthenticated) return;
 
     const fetchConversations = async () => {
       try {
-        const response = await fetch("/api/conversations?limit=10");
+        globalOffset = 0;
+        const response = await fetch(
+          `/api/conversations?limit=${PAGE_SIZE}&offset=0`,
+        );
         if (response.ok) {
           const data = await response.json();
           const dbConversations = (data.conversations || []).map(
@@ -56,38 +120,7 @@ export function useConversations() {
               title: conv.title === "New Chat" ? null : conv.title,
             }),
           );
-
-          // Merge strategy: preserve optimistic conversations not yet in DB
-          const optimisticIds = new Set(
-            globalConversations
-              .filter((c) => c.title === null)
-              .map((c) => c.id)
-          );
-
-          const dbMap = new Map(dbConversations.map((c: Conversation) => [c.id, c]));
-
-          const merged: Conversation[] = [];
-          const seen = new Set<string>();
-
-          for (const dbConv of dbConversations) {
-            merged.push(dbConv);
-            seen.add(dbConv.id);
-          }
-
-          for (const optConv of globalConversations) {
-            if (optConv.title === null && !seen.has(optConv.id)) {
-              merged.push(optConv);
-              seen.add(optConv.id);
-            }
-          }
-
-          merged.sort(
-            (a, b) =>
-              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-          );
-
-          globalConversations = merged;
-          notifyListeners();
+          mergeConversations(dbConversations, false);
         }
       } catch (error) {
         console.error("Failed to fetch conversations:", error);
@@ -100,9 +133,64 @@ export function useConversations() {
     fetchConversations();
   }, [isAuthenticated]);
 
+  const loadMore = async () => {
+    if (!isAuthenticated || isLoadingMore || !globalHasMore) return;
+
+    setIsLoadingMore(true);
+    const nextOffset = globalOffset + PAGE_SIZE;
+
+    try {
+      const response = await fetch(
+        `/api/conversations?limit=${PAGE_SIZE}&offset=${nextOffset}`,
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const dbConversations = (data.conversations || []).map(
+          (conv: Conversation) => ({
+            ...conv,
+            title: conv.title === "New Chat" ? null : conv.title,
+          }),
+        );
+
+        globalOffset = nextOffset;
+        mergeConversations(dbConversations, true);
+      }
+    } catch (error) {
+      console.error("Failed to load more conversations:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  const refresh = async () => {
+    if (!isAuthenticated) return;
+
+    try {
+      globalOffset = 0;
+      const response = await fetch(
+        `/api/conversations?limit=${PAGE_SIZE}&offset=0`,
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const dbConversations = (data.conversations || []).map(
+          (conv: Conversation) => ({
+            ...conv,
+            title: conv.title === "New Chat" ? null : conv.title,
+          }),
+        );
+        mergeConversations(dbConversations, false);
+      }
+    } catch (error) {
+      console.error("Failed to refresh conversations:", error);
+    }
+  };
+
   return {
     conversations: globalConversations,
     isLoading: initialLoading && isAuthenticated,
+    isLoadingMore,
+    hasMore: globalHasMore,
+    loadMore,
     addOptimisticConversation: (id: string) => {
       // Check if already exists to avoid duplicates
       if (globalConversations.find((c) => c.id === id)) {
@@ -111,7 +199,7 @@ export function useConversations() {
       // Add to beginning with null title (skeleton state)
       const newConversation: Conversation = {
         id,
-        title: null, // null = skeleton/loading state
+        title: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -133,64 +221,6 @@ export function useConversations() {
       globalConversations = globalConversations.filter((c) => c.id !== id);
       notifyListeners();
     },
-    refresh: async () => {
-      if (!isAuthenticated) return;
-      try {
-        const response = await fetch("/api/conversations?limit=10");
-        if (response.ok) {
-          const data = await response.json();
-          const dbConversations = (data.conversations || []).map(
-            (conv: Conversation) => ({
-              ...conv,
-              title: conv.title === "New Chat" ? null : conv.title,
-            }),
-          );
-
-          // Merge strategy: preserve optimistic conversations not yet in DB
-          // Identify optimistic conversations (title === null)
-          const optimisticIds = new Set(
-            globalConversations
-              .filter((c) => c.title === null)
-              .map((c) => c.id)
-          );
-
-          // Create a map of DB conversations for O(1) lookup
-          const dbMap = new Map(dbConversations.map((c: Conversation) => [c.id, c]));
-
-          // Merge: start with DB conversations, add optimistic ones not in DB
-          const merged: Conversation[] = [];
-          const seen = new Set<string>();
-
-          // Add all DB conversations first
-          for (const dbConv of dbConversations) {
-            merged.push(dbConv);
-            seen.add(dbConv.id);
-          }
-
-          // Add optimistic conversations that aren't in DB yet
-          for (const optConv of globalConversations) {
-            if (optConv.title === null && !seen.has(optConv.id)) {
-              merged.push(optConv);
-              seen.add(optConv.id);
-            }
-          }
-
-          // Sort by updatedAt (newest first)
-          merged.sort(
-            (a, b) =>
-              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-          );
-
-          globalConversations = merged;
-          notifyListeners();
-        }
-      } catch (error) {
-        console.error("Failed to refresh conversations:", error);
-      }
-    },
+    refresh,
   };
-}
-
-function notifyListeners() {
-  listeners.forEach((listener) => listener());
 }

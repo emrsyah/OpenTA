@@ -45,6 +45,7 @@ import { useConversations } from "@/hooks/use-conversations";
 import { authClient } from "@/lib/auth/client";
 import { GoogleSsoButton } from "./auth/google-sso-button";
 import { UserMenu } from "./auth/user-menu";
+import { FeedbackDialog } from "./feedback-dialog";
 import { Separator } from "./ui/separator";
 
 // Menu items for Telkom University Research Directory
@@ -60,6 +61,12 @@ const items = [
     url: "/browse",
     icon: BookOpen,
     description: "Explore alumni research",
+  },
+  {
+    title: "Cari Dosen",
+    url: "/cari-dosen",
+    icon: GraduationCap,
+    description: "Find research supervisors",
   },
   // {
   //   title: "Workspace",
@@ -83,6 +90,9 @@ export function AppSidebar() {
   const {
     conversations,
     isLoading: isLoadingConversations,
+    hasMore,
+    isLoadingMore,
+    loadMore,
     removeConversation,
     refresh,
     addOptimisticConversation,
@@ -247,12 +257,14 @@ export function AppSidebar() {
                             )}
                           </Link>
                         </SidebarMenuButton>
-                        <SidebarMenuAction showOnHover>
+                        <SidebarMenuAction asChild showOnHover>
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6"
-                            onClick={(e) => openDeleteDialog(conversation.id, e)}
+                            onClick={(e) =>
+                              openDeleteDialog(conversation.id, e)
+                            }
                           >
                             <Trash2 className="h-3 w-3 text-destructive" />
                           </Button>
@@ -260,12 +272,29 @@ export function AppSidebar() {
                       </SidebarMenuItem>
                     ))}
                   </SidebarMenu>
+                  {hasMore && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs text-muted-foreground"
+                      onClick={loadMore}
+                      disabled={isLoadingMore}
+                    >
+                      {isLoadingMore ? (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        "Load More"
+                      )}
+                    </Button>
+                  )}
                 </div>
               )}
             </SidebarGroupContent>
           </SidebarGroup>
         )}
-
       </SidebarContent>
       <SidebarFooter className="border-t p-4 hover-scrollbar">
         {isPending ? (
@@ -276,6 +305,7 @@ export function AppSidebar() {
         ) : isAuthenticated ? (
           <div className="flex flex-col gap-2">
             <UserMenu />
+            <FeedbackDialog />
             <Separator className="my-1" />
             <p className="text-xs text-muted-foreground text-center">
               "Knowledge doesn't wait to be found. It waits to be asked."
@@ -284,6 +314,7 @@ export function AppSidebar() {
         ) : (
           <div className="flex flex-col gap-2">
             <GoogleSsoButton />
+            <FeedbackDialog />
             <p className="text-xs text-muted-foreground text-center">
               "Knowledge doesn't wait to be found. It waits to be asked."
             </p>

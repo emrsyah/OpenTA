@@ -64,16 +64,16 @@ export function MessageResearchPanel({
 
   // Only show panel if we have plan steps OR thinking content (CoT reasoning)
   const hasPlanSteps = planSteps && planSteps.length > 0;
-  const hasThinkingContent = thinkingContent && thinkingContent.trim().length > 0;
-  
+  const hasThinkingContent =
+    thinkingContent && thinkingContent.trim().length > 0;
+
   if (!hasPlanSteps && !hasThinkingContent) {
     return null;
   }
 
   const isPlanRunning = isStreaming && !answerStarted;
   const stepCount = planSteps?.length ?? 0;
-  const doneCount =
-    planSteps?.filter((s) => s.status === "done").length ?? 0;
+  const doneCount = planSteps?.filter((s) => s.status === "done").length ?? 0;
   const allDone = doneCount === stepCount && stepCount > 0;
 
   const label = isPlanRunning
@@ -134,7 +134,9 @@ export function MessageResearchPanel({
                     {step.searchQuery && (
                       <TaskItem className="flex items-center gap-1.5 text-xs">
                         <SearchIcon className="size-3 shrink-0" />
-                        <span className="italic truncate">{step.searchQuery}</span>
+                        <span className="italic truncate">
+                          {step.searchQuery}
+                        </span>
                         {step.paperCount !== undefined && (
                           <span className="shrink-0 text-muted-foreground">
                             · {step.paperCount} papers

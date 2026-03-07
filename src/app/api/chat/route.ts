@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${backendToken}`, // JWT for user verification
+        Authorization: `Bearer ${backendToken}`, // JWT for user verification
       },
       body: JSON.stringify({
         query,
@@ -87,7 +87,9 @@ export async function POST(req: NextRequest) {
           ...(filters?.yearFrom && { year_from: filters.yearFrom }),
           ...(filters?.yearTo && { year_to: filters.yearTo }),
           ...(filters?.author && { author: filters.author }),
-          ...(filters?.hasElectronicAccess !== undefined && { has_electronic_access: filters.hasElectronicAccess }),
+          ...(filters?.hasElectronicAccess !== undefined && {
+            has_electronic_access: filters.hasElectronicAccess,
+          }),
           // Note: user_id is extracted from JWT by Python backend, not sent in body
         },
       }),
@@ -180,7 +182,7 @@ export async function POST(req: NextRequest) {
                   controller.enqueue(
                     encoder.encode(
                       JSON.stringify({ type: "plan", steps: parsed.steps }) +
-                      "\n",
+                        "\n",
                     ),
                   );
                 } else if (parsed.type === "step_start") {
@@ -201,13 +203,15 @@ export async function POST(req: NextRequest) {
                         type: "step_action",
                         step_id: parsed.step_id,
                         action: parsed.action,
-                        ...(parsed.action === "reformulated_query" ? {
-                          original_query: parsed.original_query,
-                          query: parsed.query,
-                          paper_count: parsed.paper_count,
-                        } : {
-                          query: parsed.query,
-                        }),
+                        ...(parsed.action === "reformulated_query"
+                          ? {
+                              original_query: parsed.original_query,
+                              query: parsed.query,
+                              paper_count: parsed.paper_count,
+                            }
+                          : {
+                              query: parsed.query,
+                            }),
                       }) + "\n",
                     ),
                   );
@@ -336,8 +340,10 @@ export async function POST(req: NextRequest) {
                       JSON.stringify({
                         type: "citation_audit",
                         is_clean: parsed.is_clean,
-                        hallucinated_citation_numbers: parsed.hallucinated_citation_numbers,
-                        total_citations_in_answer: parsed.total_citations_in_answer,
+                        hallucinated_citation_numbers:
+                          parsed.hallucinated_citation_numbers,
+                        total_citations_in_answer:
+                          parsed.total_citations_in_answer,
                         total_papers_available: parsed.total_papers_available,
                       }) + "\n",
                     ),

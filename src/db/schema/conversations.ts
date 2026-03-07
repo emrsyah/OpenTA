@@ -19,8 +19,12 @@ export const conversations = pgTable(
     title: text(),
     isIncognito: boolean("is_incognito").default(false).notNull(),
     userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
     index("conversations_user_id_idx").using("btree", table.userId),
@@ -41,18 +45,21 @@ export const messages = pgTable(
       .notNull(),
     question: text().notNull(),
     answer: text().notNull(),
-    sources: jsonb("sources").$type<
-      Array<{
-        id: string;
-        title: string;
-        authors: string[];
-        abstract: string;
-        year: number;
-        citation_number: number;
-      }>
-    >(),
+    sources:
+      jsonb("sources").$type<
+        Array<{
+          id: string;
+          title: string;
+          authors: string[];
+          abstract: string;
+          year: number;
+          citation_number: number;
+        }>
+      >(),
     searchQuery: text("search_query"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
     index("messages_conversation_id_idx").using(
@@ -63,13 +70,16 @@ export const messages = pgTable(
 );
 
 // Relations
-export const conversationsRelations = relations(conversations, ({ one, many }) => ({
-  user: one(user, {
-    fields: [conversations.userId],
-    references: [user.id],
+export const conversationsRelations = relations(
+  conversations,
+  ({ one, many }) => ({
+    user: one(user, {
+      fields: [conversations.userId],
+      references: [user.id],
+    }),
+    messages: many(messages),
   }),
-  messages: many(messages),
-}));
+);
 
 export const messagesRelations = relations(messages, ({ one }) => ({
   conversation: one(conversations, {
