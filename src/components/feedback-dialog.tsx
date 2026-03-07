@@ -30,9 +30,26 @@ export function FeedbackDialog() {
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
 
+  // Validation constants (must match API)
+  const MIN_MESSAGE_LENGTH = 10;
+  const MAX_MESSAGE_LENGTH = 2000;
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const isMessageValid =
+    message.trim().length >= MIN_MESSAGE_LENGTH &&
+    message.trim().length <= MAX_MESSAGE_LENGTH;
+  const isEmailValid = !email.trim() || EMAIL_REGEX.test(email.trim());
+
   const handleSubmit = async () => {
-    if (!message.trim() || message.trim().length < 10) {
-      toast.error("Message must be at least 10 characters");
+    if (!isMessageValid) {
+      toast.error(
+        `Message must be between ${MIN_MESSAGE_LENGTH} and ${MAX_MESSAGE_LENGTH} characters`,
+      );
+      return;
+    }
+
+    if (!isEmailValid) {
+      toast.error("Please provide a valid email address");
       return;
     }
 
@@ -125,17 +142,27 @@ export function FeedbackDialog() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               className="min-h-[100px]"
+              maxLength={MAX_MESSAGE_LENGTH + 100} // Allow slight buffer before hard cutoff
             />
-            <p className="text-xs text-muted-foreground">
-              Minimum 10 characters
-            </p>
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Minimum {MIN_MESSAGE_LENGTH} characters</span>
+              <span
+                className={
+                  message.length > MAX_MESSAGE_LENGTH
+                    ? "text-destructive"
+                    : undefined
+                }
+              >
+                {message.length}/{MAX_MESSAGE_LENGTH}
+              </span>
+            </div>
           </div>
         </div>
         <DialogFooter>
           <Button
             type="submit"
             onClick={handleSubmit}
-            disabled={isSubmitting || message.trim().length < 10}
+            disabled={isSubmitting || !isMessageValid || !isEmailValid}
           >
             {isSubmitting ? (
               <>

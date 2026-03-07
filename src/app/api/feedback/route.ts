@@ -3,6 +3,14 @@ import { db } from "@/db";
 import { feedback } from "@/db/schema/feedback";
 import { auth } from "@/lib/auth";
 
+// Email validation regex
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Validation constants
+const MIN_MESSAGE_LENGTH = 10;
+const MAX_MESSAGE_LENGTH = 2000;
+const MAX_EMAIL_LENGTH = 255;
+
 export async function POST(req: Request) {
   try {
     const session = await auth.api.getSession({ headers: req.headers });
@@ -10,24 +18,84 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { message, email, path } = body;
 
-    if (!message || message.trim().length < 10) {
+    // Validate path
+    if (!path || typeof path !== "string") {
       return NextResponse.json(
-        { error: "Message must be at least 10 characters" },
+        { error: "Path is required" },
         { status: 400 },
       );
     }
 
-    if (!path) {
-      return NextResponse.json({ error: "Path is required" }, { status: 400 });
+    // Validate path length
+    if (path.length > 512) {
+      return NextResponse.json(
+        { error: "Invalid path" },
+        { status: 400 },
+      );
     }
 
-    // Use user's email if logged in, otherwise use provided email or null
-    const userEmail = session?.user?.email || email || null;
+    // Validate message
+    if (!message || typeof message !== "string") {
+      return NextResponse.json(
+        { error: "Message is required" },
+        { status: 400 },
+      );
+    }
+
+    const trimmedMessage = message.trim();
+
+    if (trimmedMessage.length < MIN_MESSAGE_LENGTH) {
+      return NextResponse.json(
+        { error: `Message must be at least ${MIN_MESSAGE_LENGTH} characters` },
+        { status: 400 },
+      );
+    }
+
+    if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+      return NextResponse.json(
+        { error: `Message must be less than ${MAX_MESSAGE_LENGTH} characters` },
+        { status: 400 },
+      );
+    }
+
+    // Handle email validation
+    let userEmail: string | null = null;
+
+    if (session?.user?.email) {
+      // Use authenticated user's email
+      userEmail = session.user.email;
+    } else if (email) {
+      // Validate provided email for anonymous users
+      if (typeof email !== "string") {
+        return NextResponse.json(
+          { error: "Invalid email format" },
+          { status: 400 },
+        );
+      }
+
+      const trimmedEmail = email.trim();
+
+      if (trimmedEmail.length > MAX_EMAIL_LENGTH) {
+        return NextResponse.json(
+          { error: "Email is too long" },
+          { status: 400 },
+        );
+      }
+
+      if (trimmedEmail && !EMAIL_REGEX.test(trimmedEmail)) {
+        return NextResponse.json(
+          { error: "Please provide a valid email address" },
+          { status: 400 },
+        );
+      }
+
+      userEmail = trimmedEmail || null;
+    }
 
     await db.insert(feedback).values({
-      message: message.trim(),
+      message: trimmedMessage,
       email: userEmail,
-      path,
+      path: path.trim(),
       userId: session?.user?.id || null,
     });
 
