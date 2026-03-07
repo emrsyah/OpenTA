@@ -8,28 +8,10 @@ import { embedQuery, isVoyageConfigured } from "@/lib/voyage";
 // S1 Thesis type constant
 const S1_CATALOG_TYPE = "Karya Ilmiah - Skripsi (S1) - Reference";
 
+import { LecturerResult } from "@/types/lecturer";
+
 // Vector similarity threshold (lower = more similar)
 const SIMILARITY_THRESHOLD = 0.5;
-
-interface LecturerResult {
-  name: string;
-  paperCount: number;
-  relevanceScore: number;
-  searchMethod: "vector" | "fulltext";
-  stats: {
-    totalPapers: number;
-    yearRange: { min: number | null; max: number | null };
-    subjects: string[];
-  };
-  topPapers: Array<{
-    id: number;
-    title: string;
-    author: string | null;
-    publicationYear: number | null;
-    abstract: string | null;
-    subject: string | null;
-  }>;
-}
 
 interface PaperResult {
   id: number;
@@ -61,7 +43,8 @@ async function vectorSearch(
   ];
 
   if (lecturerName) {
-    conditions.push(ilike(catalog.editor, `%${lecturerName}%`));
+    const escapedName = lecturerName.replace(/[%_]/g, '\\$&');
+    conditions.push(ilike(catalog.editor, `%${escapedName}%`));
   }
 
   // Vector similarity search using cosine distance (<=>)

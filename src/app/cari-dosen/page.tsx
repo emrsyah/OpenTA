@@ -1,16 +1,10 @@
 "use client";
 
-import {
-  BookOpen,
-  GraduationCap,
-  Loader2,
-  Search,
-  Sparkles,
-  Users,
-  Zap,
-} from "lucide-react";
+import { BookOpen, GraduationCap, Loader2, Search, Sparkles, Users, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { useDebouncedCallback } from "use-debounce";
 import { LecturerCard } from "@/components/lecturer-card";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -18,38 +12,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { LecturerResult, SearchResponse } from "@/types/lecturer";
 
 type SearchMode = "keyword" | "semantic";
 
-interface LecturerResult {
-  name: string;
-  paperCount: number;
-  relevanceScore: number;
-  searchMethod: "vector" | "fulltext";
-  stats: {
-    totalPapers: number;
-    yearRange: { min: number | null; max: number | null };
-    subjects: string[];
-  };
-  topPapers: Array<{
-    id: number;
-    title: string;
-    author: string | null;
-    publicationYear: number | null;
-    abstract: string | null;
-    subject: string | null;
-  }>;
-}
 
-interface SearchResponse {
-  lecturers: LecturerResult[];
-  total: number;
-  query: {
-    topic: string;
-    lecturerName: string;
-  };
-  searchMethod: "vector" | "fulltext";
-}
 
 const EXAMPLE_TOPICS = [
   "machine learning untuk prediksi churn pelanggan",
@@ -78,60 +45,56 @@ export default function CariDosenPage() {
   const router = useRouter();
   const [topic, setTopic] = useState("");
   const [searchMode, setSearchMode] = useState<SearchMode>("keyword");
-  const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [results, setResults] = useState<SearchResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  const searchLecturers = useCallback(
-    async (searchTopic: string, mode: SearchMode) => {
-      if (!searchTopic.trim()) return;
+  // Fetcher for SWR
+  const fetcher = async (url: string) => {
+    const res = await fetch(url);
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || "Terjadi kesalahan saat mencari dosen");
+    }
+    return res.json() as Promise<SearchResponse>;
+  };
 
-      setIsSearching(true);
-      setError(null);
-      setHasSearched(true);
+  const params = new URLSearchParams({
+    topic: topic.trim(),
+    limit: "20",
+    minPapers: "1",
+    searchMode: searchMode,
+  });
 
-      try {
-        const params = new URLSearchParams({
-          topic: searchTopic,
-          limit: "20",
-          minPapers: "1",
-          searchMode: mode,
-        });
+  // Enable SWR based on conditions (topic.length > 0 && hasSearched)
+  const shouldFetch = hasSearched && topic.trim().length > 0;
 
-        const response = await fetch(`/api/lecturers/search?${params}`);
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            errorData.error || "Terjadi kesalahan saat mencari dosen",
-          );
-        }
-
-        const data: SearchResponse = await response.json();
-        setResults(data);
-      } catch (err) {
-        console.error("Search error:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Terjadi kesalahan saat mencari dosen. Silakan coba lagi.",
-        );
-      } finally {
-        setIsSearching(false);
-      }
-    },
-    [],
+  const { data: results, error: swrError, isLoading: swrLoading } = useSWR<SearchResponse>(
+    shouldFetch ? `/api/lecturers/search?${params}` : null,
+    fetcher,
+    { keepPreviousData: true, revalidateOnFocus: false }
   );
+
+  const error = swrError?.message || null;
+  const isSearching = swrLoading;
+
+  const debouncedSearch = useDebouncedCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setTopic(e.target.value);
+    if (e.target.value.trim().length > 0) {
+      setHasSearched(true);
+    } else {
+      setHasSearched(false);
+    }
+  }, 500);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    searchLecturers(topic, searchMode);
+    if (topic.trim().length > 0) {
+      setHasSearched(true);
+    }
   };
 
   const handleExampleClick = (example: string) => {
     setTopic(example);
-    searchLecturers(example, searchMode);
+    setHasSearched(true);
   };
 
   const handleViewLecturer = (name: string) => {
@@ -209,8 +172,8 @@ export default function CariDosenPage() {
                 <Input
                   type="text"
                   placeholder="Masukkan topik penelitianmu..."
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
+                  defaultValue={topic}
+                  onChange={debouncedSearch}
                   className="pl-12 pr-32 py-6 text-lg rounded-xl border-2 border-border/50 focus:border-primary transition-colors"
                 />
                 <Button

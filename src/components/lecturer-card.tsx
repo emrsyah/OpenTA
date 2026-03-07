@@ -33,11 +33,10 @@ interface LecturerCardProps {
 export function LecturerCard({ lecturer, onViewDetail }: LecturerCardProps) {
   const { name, paperCount, stats, topPapers } = lecturer;
 
-  // Calculate relevance percentage (mock calculation based on paper count and recency)
-  const relevancePercent = Math.min(
-    95,
-    Math.max(50, Math.round((paperCount / 15) * 100)),
-  );
+  // Calculate relevance percentage
+  const relevancePercent = lecturer.relevanceScore
+    ? Math.round(lecturer.relevanceScore * 100)
+    : Math.min(95, Math.max(50, Math.round((paperCount / 15) * 100)));
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">

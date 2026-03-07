@@ -45,7 +45,9 @@
     "react-dom": "19.2.3",
     "sonner": "^2.0.7",
     "streamdown": "^2.2.0",
+    "swr": "^2.4.1",
     "tailwind-merge": "^3.4.1",
+    "use-debounce": "^10.1.0",
     "use-stick-to-bottom": "^1.1.3",
     "zod": "^4.3.6"
   },

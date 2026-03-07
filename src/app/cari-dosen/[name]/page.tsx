@@ -18,66 +18,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DetailResponse, WebSearchResponse, Paper } from "@/types/lecturer";
 
-interface Paper {
-  id: number;
-  title: string;
-  author: string | null;
-  publicationYear: number | null;
-  abstract: string | null;
-  subject: string | null;
-  catalogNumber: string | null;
-  classificationNumber: string | null;
-  publisher: string | null;
-  accessLink: string | null;
-}
 
-interface LecturerDetail {
-  name: string;
-  stats: {
-    totalPapers: number;
-    yearRange: { min: number | null; max: number | null };
-    subjects: string[];
-    coLecturers: string[];
-  };
-  papers: Paper[];
-}
-
-interface DetailResponse {
-  lecturer: LecturerDetail;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-interface WebSearchResult {
-  title: string;
-  url: string;
-  text?: string;
-  publishedDate?: string;
-  score?: number;
-}
-
-interface WebSearchResults {
-  academic: WebSearchResult[];
-  publications: WebSearchResult[];
-  other: WebSearchResult[];
-}
-
-interface WebSearchResponse {
-  query: string;
-  results: WebSearchResults;
-  total: number;
-}
 
 export default function LecturerDetailPage() {
   const params = useParams();
@@ -93,11 +42,7 @@ export default function LecturerDetailPage() {
   const [webSearchResults, setWebSearchResults] = useState<WebSearchResponse | null>(null);
   const [webSearchError, setWebSearchError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchLecturerData(currentPage);
-  }, [name, currentPage]);
-
-  const fetchLecturerData = async (page: number) => {
+  const fetchLecturerData = useCallback(async (page: number) => {
     setIsLoading(true);
     setError(null);
 
@@ -122,7 +67,11 @@ export default function LecturerDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [name]);
+
+  useEffect(() => {
+    fetchLecturerData(currentPage);
+  }, [currentPage, fetchLecturerData]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && data && newPage <= data.pagination.totalPages) {
@@ -133,17 +82,17 @@ export default function LecturerDetailPage() {
 
   const handleWebSearch = async () => {
     if (webSearchLoading || webSearchResults) return;
-    
+
     setWebSearchLoading(true);
     setWebSearchError(null);
-    
+
     try {
       const response = await fetch(`/api/lecturers/web-search?name=${encodeURIComponent(name)}`);
-      
+
       if (!response.ok) {
         throw new Error("Failed to search lecturer information");
       }
-      
+
       const data: WebSearchResponse = await response.json();
       setWebSearchResults(data);
     } catch (err) {
@@ -543,7 +492,13 @@ function WebSearchCard({
                             {result.title}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">
-                            {new URL(result.url).hostname}
+                            {(() => {
+                              try {
+                                return new URL(result.url).hostname;
+                              } catch {
+                                return result.url;
+                              }
+                            })()}
                           </p>
                         </div>
                       </a>
@@ -577,7 +532,13 @@ function WebSearchCard({
                             {result.title}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">
-                            {new URL(result.url).hostname}
+                            {(() => {
+                              try {
+                                return new URL(result.url).hostname;
+                              } catch {
+                                return result.url;
+                              }
+                            })()}
                           </p>
                         </div>
                       </a>
@@ -611,7 +572,13 @@ function WebSearchCard({
                             {result.title}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">
-                            {new URL(result.url).hostname}
+                            {(() => {
+                              try {
+                                return new URL(result.url).hostname;
+                              } catch {
+                                return result.url;
+                              }
+                            })()}
                           </p>
                         </div>
                       </a>

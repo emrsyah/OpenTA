@@ -30,15 +30,19 @@ export async function GET(request: Request) {
       sql`${catalog.editor} IS NOT NULL`,
     );
 
-    // Get total count
-    const countResult = await db
-      .select({ count: sql<number>`count(*)` })
+    // Get all papers for this lecturer to calculate accurate stats (fetching only necessary columns)
+    const allPapers = await db
+      .select({
+        publicationYear: catalog.publicationYear,
+        subject: catalog.subject,
+        editor: catalog.editor,
+      })
       .from(catalog)
       .where(whereClause);
 
-    const totalCount = Number(countResult[0]?.count || 0);
+    const totalCount = allPapers.length;
 
-    // Get papers with pagination
+    // Get papers with pagination for the actual list
     const papers = await db
       .select({
         id: catalog.id,
@@ -59,12 +63,12 @@ export async function GET(request: Request) {
       .limit(limit)
       .offset(offset);
 
-    // Calculate stats
-    const stats = calculateLecturerStats(papers);
+    // Calculate stats across ALL papers
+    const stats = calculateLecturerStats(allPapers);
 
-    // Extract unique co-lecturers (other editors on same papers)
+    // Extract unique co-lecturers across ALL papers
     const coLecturers = new Set<string>();
-    for (const paper of papers) {
+    for (const paper of allPapers) {
       if (paper.editor) {
         const editors = parseEditorField(paper.editor);
         for (const editor of editors) {
