@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { HoverCardTrigger } from "@/components/ui/hover-card";
 import { groupAndSortSources } from "@/hooks/use-citations";
 import type { Source as SourceType } from "@/hooks/use-streaming-chat";
+import { SaveButton } from "@/components/save-button";
 
 interface MessageSourcesProps {
   sources: SourceType[];
@@ -84,6 +85,14 @@ export function MessageSources({ sources }: MessageSourcesProps) {
                               {s.authors.length > 3 ? " et al." : ""} &bull;{" "}
                               {s.year}
                             </p>
+                            <div className="mt-2">
+                              <SaveButton 
+                                catalogId={parseInt(s.id, 10)} 
+                                variant="badge" 
+                                paperTitle={s.title}
+                                size="sm"
+                              />
+                            </div>
                           </InlineCitationSource>
                         </InlineCitationCarouselItem>
                       ))}

@@ -28,6 +28,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
+import { SaveButton } from "@/components/save-button";
 
 interface CatalogItem {
   id: number;
@@ -83,6 +84,7 @@ export const CatalogCard = memo(
             >
               {item.title}
             </CardTitle>
+            <SaveButton catalogId={item.id} variant="icon" paperTitle={item.title} />
           </div>
           {item.catalogType ? (
             <Badge
