@@ -14,7 +14,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +41,7 @@ interface SavedPaperCardProps {
   paper: SavedPaper;
 }
 
-export function SavedPaperCard({ paper }: SavedPaperCardProps) {
+function SavedPaperCardBase({ paper }: SavedPaperCardProps) {
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [noteValue, setNoteValue] = useState(paper.note ?? "");
   const [isSaving, setIsSaving] = useState(false);
@@ -51,6 +51,16 @@ export function SavedPaperCard({ paper }: SavedPaperCardProps) {
     {},
   );
   const { collections } = useCollections();
+
+  // O(1) lookup using Map instead of O(n) find on every render
+  const collectionMap = useMemo(
+    () => new Map(collections.map((c) => [c.id, c])),
+    [collections],
+  );
+
+  const collectionName = paper.collectionId
+    ? (collectionMap.get(paper.collectionId)?.name ?? "Unknown")
+    : "Uncategorized";
 
   const handleSaveNote = async () => {
     setIsSaving(true);
@@ -78,10 +88,6 @@ export function SavedPaperCard({ paper }: SavedPaperCardProps) {
       }
     }
   };
-
-  const collectionName = paper.collectionId
-    ? (collections.find((c) => c.id === paper.collectionId)?.name ?? "Unknown")
-    : "Uncategorized";
 
   const isProcessing = isUpdating || isUnsaving || isSaving;
 
@@ -251,6 +257,9 @@ export function SavedPaperCard({ paper }: SavedPaperCardProps) {
         onOpenChange={setIsMoveDialogOpen}
         paper={paper}
       />
-    </>
-  );
+</>
+);
 }
+
+// Memoize to prevent re-renders when parent updates but paper prop hasn't changed
+export const SavedPaperCard = memo(SavedPaperCardBase);
