@@ -1,7 +1,7 @@
 "use client";
 
 import { Bookmark, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -49,49 +49,15 @@ export function SaveButton({
   const { savePaper, unsavePaper, isSaving, isUnsaving } = useSavedPapers({});
   const { collections } = useCollections();
 
-  const isProcessing = isSaving || isUnsaving;
-  const isLoading = isStatusLoading || isAuthPending;
+  // O(1) lookup using Map instead of O(n) find on every render
+  const collectionMap = useMemo(
+    () => new Map(collections.map((c) => [c.id, c])),
+    [collections],
+  );
 
-  const handleSave = async (collectionId: number | null, note?: string) => {
-    if (!isAuthenticated) {
-      onLoginRequired?.();
-      return;
-    }
-
-    try {
-      await savePaper({ catalogId, collectionId, note });
-      mutateStatus();
-      setShowPicker(false);
-    } catch (error) {
-      console.error("Failed to save paper:", error);
-    }
-  };
-
-  const handleUnsave = async () => {
-    if (!savedPaperId) return;
-
-    try {
-      await unsavePaper({ id: savedPaperId });
-      mutateStatus();
-    } catch (error) {
-      console.error("Failed to unsave paper:", error);
-    }
-  };
-
-  const handleUnsaveFromCollection = async (paperId: number) => {
-    try {
-      await unsavePaper({ id: paperId });
-      mutateStatus();
-    } catch (error) {
-      console.error("Failed to unsave paper:", error);
-    }
-  };
-
-  // Get collection names for saved papers
   const getCollectionName = (collectionId: number | null): string => {
     if (collectionId === null) return "Uncategorized";
-    const collection = collections.find((c) => c.id === collectionId);
-    return collection?.name ?? "Unknown";
+    return collectionMap.get(collectionId)?.name ?? "Unknown";
   };
 
   // Loading state

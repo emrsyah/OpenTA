@@ -1,6 +1,7 @@
 "use client";
 
 import { Folder, Inbox } from "lucide-react";
+import { memo, useMemo } from "react";
 import type { Collection } from "@/hooks/use-collections";
 import { cn } from "@/lib/utils";
 
@@ -11,12 +12,20 @@ interface CollectionListProps {
   onSelect: (collectionId: string | null) => void;
 }
 
-export function CollectionList({
+function CollectionListBase({
   collections,
   uncategorizedCount,
   selectedCollection,
   onSelect,
 }: CollectionListProps) {
+  // Memoize total count to avoid recalculation on every render
+  const totalCount = useMemo(
+    () =>
+      collections.reduce((sum, c) => sum + c.paperCount, 0) +
+      uncategorizedCount,
+    [collections, uncategorizedCount],
+  );
+
   return (
     <nav className="space-y-1">
       {/* All Saved */}
@@ -32,10 +41,7 @@ export function CollectionList({
       >
         <Inbox className="h-4 w-4" />
         <span className="flex-1 text-left">All Saved</span>
-        <span className="text-xs text-muted-foreground">
-          {collections.reduce((sum, c) => sum + c.paperCount, 0) +
-            uncategorizedCount}
-        </span>
+        <span className="text-xs text-muted-foreground">{totalCount}</span>
       </button>
 
       {/* Uncategorized */}
@@ -89,3 +95,6 @@ export function CollectionList({
     </nav>
   );
 }
+
+// Memoize to prevent re-renders when parent updates but props haven't changed
+export const CollectionList = memo(CollectionListBase);
