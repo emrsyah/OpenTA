@@ -33,7 +33,8 @@ export function MoveToCollectionDialog({
 
   const { collections } = useCollections();
   const { movePaper, isUpdating } = useSavedPapers({});
-  const { movePaper, unsavePaper, isUpdating } = useSavedPapers({});
+
+  // Get current collection IDs
 
   // Get current collection IDs that the paper is saved to
   const existingCollectionIds = groupedPaper.savedPapers

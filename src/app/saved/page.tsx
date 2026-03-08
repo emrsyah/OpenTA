@@ -15,7 +15,7 @@ import { useSavedPapers } from "@/hooks/use-saved-papers";
 import { authClient } from "@/lib/auth/client";
 
 // Grouped paper type - combines duplicate papers into one with all their collections
-interface GroupedPaper {
+export interface GroupedPaper {
   catalogId: number;
   title: string;
   author: string | null;
