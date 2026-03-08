@@ -257,8 +257,8 @@ function SavedPaperCardBase({ paper }: SavedPaperCardProps) {
         onOpenChange={setIsMoveDialogOpen}
         paper={paper}
       />
-</>
-);
+    </>
+  );
 }
 
 // Memoize to prevent re-renders when parent updates but paper prop hasn't changed
