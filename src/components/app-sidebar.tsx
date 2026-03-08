@@ -74,12 +74,12 @@ const items = [
   //   icon: Folder,
   //   description: "Manage your research",
   // },
-  // {
-  //   title: "Saved Papers",
-  //   url: "/saved",
-  //   icon: Bookmark,
-  //   description: "Your bookmarked research",
-  // },
+  {
+    title: "Saved Papers",
+    url: "/saved",
+    icon: Bookmark,
+    description: "Your bookmarked research",
+  },
 ];
 
 export function AppSidebar() {
