@@ -2,7 +2,7 @@
 
 import { FolderOpen, Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CollectionList } from "@/components/collection-list";
 import { CreateCollectionDialog } from "@/components/create-collection-dialog";
 import { SavedPaperCard } from "@/components/saved-paper-card";
@@ -10,8 +10,67 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCollections } from "@/hooks/use-collections";
+import type { SavedPaper } from "@/hooks/use-saved-papers";
 import { useSavedPapers } from "@/hooks/use-saved-papers";
 import { authClient } from "@/lib/auth/client";
+
+// Grouped paper type - combines duplicate papers into one with all their collections
+interface GroupedPaper {
+  catalogId: number;
+  title: string;
+  author: string | null;
+  abstract: string | null;
+  publicationYear: number | null;
+  catalogType: string | null;
+  accessLink: string | null;
+  // All saved paper entries for this catalog item (one per collection)
+  savedPapers: Array<{
+    id: number;
+    collectionId: number | null;
+    note: string | null;
+    createdAt: string;
+  }>;
+}
+
+// Helper to group papers by catalogId
+function groupPapersByCatalog(papers: SavedPaper[]): GroupedPaper[] {
+  const grouped = new Map<number, GroupedPaper>();
+
+  for (const paper of papers) {
+    const existing = grouped.get(paper.catalogId);
+
+    if (existing) {
+      // Add to existing group's saved papers array
+      existing.savedPapers.push({
+        id: paper.id,
+        collectionId: paper.collectionId,
+        note: paper.note,
+        createdAt: paper.createdAt,
+      });
+    } else {
+      // Create new group
+      grouped.set(paper.catalogId, {
+        catalogId: paper.catalogId,
+        title: paper.title,
+        author: paper.author,
+        abstract: paper.abstract,
+        publicationYear: paper.publicationYear,
+        catalogType: paper.catalogType,
+        accessLink: paper.accessLink,
+        savedPapers: [
+          {
+            id: paper.id,
+            collectionId: paper.collectionId,
+            note: paper.note,
+            createdAt: paper.createdAt,
+          },
+        ],
+      });
+    }
+  }
+
+  return Array.from(grouped.values());
+}
 
 export default function SavedPapersPage() {
   const router = useRouter();
@@ -36,24 +95,31 @@ export default function SavedPapersPage() {
     isLoading: isLoadingCollections,
     isCreating,
   } = useCollections();
+  // Group papers by catalogId to avoid duplicates
+  const groupedPapers = useMemo(
+    () => groupPapersByCatalog(savedPapers),
+    [savedPapers],
+  );
 
-  // Redirect if not authenticated
+  // Filter grouped papers by search query
+  const filteredPapers = useMemo(() => {
+    if (!searchQuery) return groupedPapers;
+
+    const query = searchQuery.toLowerCase();
+    return groupedPapers.filter(
+      (paper) =>
+        paper.title.toLowerCase().includes(query) ||
+        paper.author?.toLowerCase().includes(query) ||
+        paper.savedPapers.some((sp) => sp.note?.toLowerCase().includes(query)),
+    );
+  }, [groupedPapers, searchQuery]);
+
+  const isLoading = isPending || isLoadingPapers || isLoadingCollections;
+
   if (!isPending && !session?.user) {
     router.push("/");
     return null;
   }
-
-  // Filter papers by search query
-  const filteredPapers = searchQuery
-    ? savedPapers.filter(
-        (paper) =>
-          paper.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          paper.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          paper.note?.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    : savedPapers;
-
-  const isLoading = isPending || isLoadingPapers || isLoadingCollections;
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
@@ -148,7 +214,7 @@ export default function SavedPapersPage() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {filteredPapers.map((paper) => (
-                <SavedPaperCard key={paper.id} paper={paper} />
+                <SavedPaperCard key={paper.catalogId} groupedPaper={paper} />
               ))}
             </div>
           )}

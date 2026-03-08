@@ -60,8 +60,50 @@ export function SaveButton({
     return collectionMap.get(collectionId)?.name ?? "Unknown";
   };
 
+  // Derived state
+  const isProcessing = isSaving || isUnsaving;
+
+  // Extract existing collection IDs for the picker
+  const existingCollectionIds = useMemo(
+    () =>
+      savedPaperIds
+        ?.map((p) => p.collectionId)
+        .filter((id): id is number => id !== null) ?? [],
+    [savedPaperIds],
+  );
+
+  const handleSave = async (collectionId: number | null, note?: string) => {
+    if (!isAuthenticated) {
+      onLoginRequired?.();
+      return;
+    }
+    try {
+      await savePaper({ catalogId, collectionId, note });
+      mutateStatus();
+    } catch (error) {
+      // Silently ignore "already saved" errors - paper might already be in this collection
+      if (error instanceof Error && !error.message.includes("already saved")) {
+        console.error("Failed to save paper:", error);
+      }
+    } finally {
+      setShowPicker(false);
+    }
+  };
+
+  const handleUnsave = async () => {
+    if (savedPaperId) {
+      await unsavePaper({ id: savedPaperId });
+      mutateStatus();
+    }
+  };
+
+  const handleUnsaveFromCollection = async (id: number) => {
+    await unsavePaper({ id });
+    mutateStatus();
+  };
+
   // Loading state
-  if (isLoading) {
+  if (isStatusLoading) {
     if (variant === "icon") {
       return (
         <Button
@@ -81,47 +123,59 @@ export function SaveButton({
   if (variant === "icon") {
     if (isSaved) {
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size={size === "sm" ? "icon-xs" : "icon-sm"}
-              className={cn("text-primary hover:text-primary", className)}
-              disabled={isProcessing}
-            >
-              <Bookmark className="h-4 w-4 fill-current" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Saved to</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {savedPaperIds?.map(({ id, collectionId }) => (
-              <DropdownMenuItem
-                key={id}
-                className="flex items-center justify-between"
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size={size === "sm" ? "icon-xs" : "icon-sm"}
+                className={cn("text-primary hover:text-primary", className)}
+                disabled={isProcessing}
               >
-                <span className="truncate">
-                  {getCollectionName(collectionId)}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleUnsaveFromCollection(id);
-                  }}
+                <Bookmark className="h-4 w-4 fill-current" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Saved to</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {savedPaperIds?.map(({ id, collectionId }) => (
+                <DropdownMenuItem
+                  key={id}
+                  className="flex items-center justify-between"
                 >
-                  <span className="text-xs">×</span>
-                </Button>
+                  <span className="truncate">
+                    {getCollectionName(collectionId)}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUnsaveFromCollection(id);
+                    }}
+                  >
+                    <span className="text-xs">x</span>
+                  </Button>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setShowPicker(true)}>
+                Save to another collection...
               </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setShowPicker(true)}>
-              Save to another collection...
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <CollectionPicker
+            open={showPicker}
+            onOpenChange={setShowPicker}
+            catalogId={catalogId}
+            paperTitle={paperTitle}
+            existingCollectionIds={existingCollectionIds}
+            onSave={handleSave}
+            isSaving={isSaving}
+          />
+        </>
       );
     }
 
@@ -148,6 +202,7 @@ export function SaveButton({
           onOpenChange={setShowPicker}
           catalogId={catalogId}
           paperTitle={paperTitle}
+          existingCollectionIds={existingCollectionIds}
           onSave={handleSave}
           isSaving={isSaving}
         />
@@ -194,6 +249,7 @@ export function SaveButton({
           onOpenChange={setShowPicker}
           catalogId={catalogId}
           paperTitle={paperTitle}
+          existingCollectionIds={existingCollectionIds}
           onSave={handleSave}
           isSaving={isSaving}
         />
@@ -234,6 +290,7 @@ export function SaveButton({
         onOpenChange={setShowPicker}
         catalogId={catalogId}
         paperTitle={paperTitle}
+        existingCollectionIds={existingCollectionIds}
         onSave={handleSave}
         isSaving={isSaving}
       />

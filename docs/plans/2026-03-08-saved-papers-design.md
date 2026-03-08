@@ -484,19 +484,19 @@ src/
 
 ## Testing Checklist
 
-- [ ] Save paper from browse page (authenticated)
-- [ ] Save paper shows login prompt (unauthenticated)
-- [ ] Save paper from chat citation
-- [ ] Create new collection
-- [ ] Edit collection name/color/icon
-- [ ] Delete collection (papers move to uncategorized)
-- [ ] Edit note on saved paper
-- [ ] Move paper to different collection
+- [x] Save paper from browse page (authenticated)
+- [x] Save paper shows login prompt (unauthenticated)
+- [x] Save paper from chat citation
+- [x] Create new collection
+- [x] Edit collection name/color/icon
+- [x] Delete collection (papers move to uncategorized)
+- [x] Edit note on saved paper
+- [x] Move paper to different collection
 - [ ] Unsave paper
-- [ ] Search within saved papers
-- [ ] Filter by collection
+- [x] Search within saved papers
+- [x] Filter by collection
 - [ ] Sort saved papers
-- [ ] Optimistic update on save (instant UI)
+- [x] Optimistic update on save (instant UI)
 - [ ] Rollback on API error
 - [ ] Handle paper deleted from catalog
 

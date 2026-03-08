@@ -34,6 +34,8 @@ interface CollectionPickerProps {
   onOpenChange: (open: boolean) => void;
   catalogId: number;
   paperTitle?: string;
+  /** Collection IDs the paper is already saved to */
+  existingCollectionIds?: number[];
   onSave: (collectionId: number | null, note?: string) => Promise<void>;
   isSaving?: boolean;
 }
@@ -43,6 +45,7 @@ export function CollectionPicker({
   onOpenChange,
   catalogId,
   paperTitle,
+  existingCollectionIds = [],
   onSave,
   isSaving = false,
 }: CollectionPickerProps) {
@@ -131,31 +134,41 @@ export function CollectionPicker({
                   </button>
 
                   {/* User collections */}
-                  {collections.map((collection) => (
-                    <button
-                      key={collection.id}
-                      type="button"
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent",
-                        selectedCollection === collection.id && "bg-accent",
-                      )}
-                      onClick={() => setSelectedCollection(collection.id)}
-                    >
-                      <div
-                        className="h-3 w-3 rounded-full shrink-0"
-                        style={{ backgroundColor: collection.color ?? "#888" }}
-                      />
-                      <span className="flex-1 text-left truncate">
-                        {collection.name}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {collection.paperCount}
-                      </span>
-                      {selectedCollection === collection.id && (
-                        <Check className="h-4 w-4 text-primary" />
-                      )}
-                    </button>
-                  ))}
+                  {collections.map((collection) => {
+                    const isAlreadySaved = existingCollectionIds.includes(collection.id);
+                    return (
+                      <button
+                        key={collection.id}
+                        type="button"
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent",
+                          selectedCollection === collection.id && "bg-accent",
+                          isAlreadySaved && "opacity-60",
+                        )}
+                        onClick={() => setSelectedCollection(collection.id)}
+                      >
+                        <div
+                          className="h-3 w-3 rounded-full shrink-0"
+                          style={{ backgroundColor: collection.color ?? "#888" }}
+                        />
+                        <span className="flex-1 text-left truncate">
+                          {collection.name}
+                        </span>
+                        {isAlreadySaved ? (
+                          <span className="text-xs text-primary font-medium">
+                            Saved
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            {collection.paperCount}
+                          </span>
+                        )}
+                        {selectedCollection === collection.id && !isAlreadySaved && (
+                          <Check className="h-4 w-4 text-primary" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { memo, useMemo, useState } from "react";
+import type { GroupedPaper } from "@/app/saved/page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,17 +34,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { useCollections } from "@/hooks/use-collections";
-import type { SavedPaper } from "@/hooks/use-saved-papers";
 import { useSavedPapers } from "@/hooks/use-saved-papers";
 import { MoveToCollectionDialog } from "./move-to-collection-dialog";
 
 interface SavedPaperCardProps {
-  paper: SavedPaper;
+  groupedPaper: GroupedPaper;
 }
 
-function SavedPaperCardBase({ paper }: SavedPaperCardProps) {
+function SavedPaperCardBase({ groupedPaper }: SavedPaperCardProps) {
   const [isEditingNote, setIsEditingNote] = useState(false);
-  const [noteValue, setNoteValue] = useState(paper.note ?? "");
+  const [noteValue, setNoteValue] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
 
@@ -58,14 +58,28 @@ function SavedPaperCardBase({ paper }: SavedPaperCardProps) {
     [collections],
   );
 
-  const collectionName = paper.collectionId
-    ? (collectionMap.get(paper.collectionId)?.name ?? "Unknown")
-    : "Uncategorized";
+  // Get all collection names for this paper
+  const collectionNames = useMemo(() => {
+    return groupedPaper.savedPapers
+      .map((sp) => {
+        if (sp.collectionId === null) return "Uncategorized";
+        return collectionMap.get(sp.collectionId)?.name ?? "Unknown";
+      })
+      .filter((name, index, self) => self.indexOf(name) === index); // Remove duplicates
+  }, [groupedPaper.savedPapers, collectionMap]);
+
+  // Get first note (if any)
+  const firstNote = groupedPaper.savedPapers[0]?.note ?? "";
 
   const handleSaveNote = async () => {
     setIsSaving(true);
     try {
-      await updateNote({ id: paper.id, note: noteValue || null });
+      // Update note for all saved paper entries
+      await Promise.all(
+        groupedPaper.savedPapers.map((sp) =>
+          updateNote({ id: sp.id, note: noteValue || null }),
+        ),
+      );
       setIsEditingNote(false);
     } catch (error) {
       console.error("Failed to save note:", error);
@@ -75,14 +89,17 @@ function SavedPaperCardBase({ paper }: SavedPaperCardProps) {
   };
 
   const handleCancelEdit = () => {
-    setNoteValue(paper.note ?? "");
+    setNoteValue(firstNote ?? "");
     setIsEditingNote(false);
   };
 
   const handleUnsave = async () => {
-    if (confirm("Remove this paper from your saved papers?")) {
+    if (confirm("Remove this paper from all collections?")) {
       try {
-        await unsavePaper({ id: paper.id });
+        // Unsaved from all collections
+        await Promise.all(
+          groupedPaper.savedPapers.map((sp) => unsavePaper({ id: sp.id })),
+        );
       } catch (error) {
         console.error("Failed to unsave paper:", error);
       }
@@ -131,17 +148,20 @@ function SavedPaperCardBase({ paper }: SavedPaperCardProps) {
         <CardHeader className="pb-2">
           <div className="flex items-start gap-2 pr-8">
             <CardTitle className="text-base line-clamp-2 flex-1">
-              {paper.title}
+              {groupedPaper.title}
             </CardTitle>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="secondary" className="text-xs">
-              <FolderOpen className="h-3 w-3 mr-1" />
-              {collectionName}
-            </Badge>
-            {paper.catalogType && (
+            {/* Show all collections as badges */}
+            {collectionNames.map((name) => (
+              <Badge key={name} variant="secondary" className="text-xs">
+                <FolderOpen className="h-3 w-3 mr-1" />
+                {name}
+              </Badge>
+            ))}
+            {groupedPaper.catalogType && (
               <Badge variant="outline" className="text-xs">
-                {paper.catalogType}
+                {groupedPaper.catalogType}
               </Badge>
             )}
           </div>
@@ -150,24 +170,26 @@ function SavedPaperCardBase({ paper }: SavedPaperCardProps) {
         <CardContent className="space-y-3 pb-3">
           {/* Author and Year */}
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            {paper.author && (
+            {groupedPaper.author && (
               <div className="flex items-center gap-1">
                 <User className="h-3.5 w-3.5" />
-                <span className="truncate max-w-[150px]">{paper.author}</span>
+                <span className="truncate max-w-[150px]">
+                  {groupedPaper.author}
+                </span>
               </div>
             )}
-            {paper.publicationYear && (
+            {groupedPaper.publicationYear && (
               <div className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
-                <span>{paper.publicationYear}</span>
+                <span>{groupedPaper.publicationYear}</span>
               </div>
             )}
           </div>
 
           {/* Abstract */}
-          {paper.abstract && (
+          {groupedPaper.abstract && (
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {paper.abstract}
+              {groupedPaper.abstract}
             </p>
           )}
 
@@ -180,7 +202,7 @@ function SavedPaperCardBase({ paper }: SavedPaperCardProps) {
                   value={noteValue}
                   onChange={(e) => setNoteValue(e.target.value)}
                   rows={3}
-                  className="text-sm resize-none"
+                  className="resize-none"
                   disabled={isSaving}
                 />
                 <div className="flex gap-2 justify-end">
@@ -207,7 +229,7 @@ function SavedPaperCardBase({ paper }: SavedPaperCardProps) {
                   </Button>
                 </div>
               </div>
-            ) : paper.note ? (
+            ) : firstNote ? (
               <button
                 type="button"
                 className="w-full text-sm text-muted-foreground bg-muted/50 rounded-md p-2 cursor-pointer hover:bg-muted/70 transition-colors text-left"
@@ -215,7 +237,7 @@ function SavedPaperCardBase({ paper }: SavedPaperCardProps) {
               >
                 <div className="flex items-start gap-1.5">
                   <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                  <p className="line-clamp-3">{paper.note}</p>
+                  <p className="line-clamp-3">{firstNote}</p>
                 </div>
               </button>
             ) : (
@@ -232,10 +254,10 @@ function SavedPaperCardBase({ paper }: SavedPaperCardProps) {
         </CardContent>
 
         <CardFooter className="pt-0">
-          {paper.accessLink ? (
+          {groupedPaper.accessLink ? (
             <Button asChild size="sm" className="w-full">
               <a
-                href={paper.accessLink}
+                href={groupedPaper.accessLink}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -255,7 +277,7 @@ function SavedPaperCardBase({ paper }: SavedPaperCardProps) {
       <MoveToCollectionDialog
         open={isMoveDialogOpen}
         onOpenChange={setIsMoveDialogOpen}
-        paper={paper}
+        groupedPaper={groupedPaper}
       />
     </>
   );

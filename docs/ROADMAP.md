@@ -41,7 +41,7 @@ This roadmap outlines planned features for OpenTA - an AI-powered research assis
 
 ### 1.1 🔖 Saved Papers System
 
-**Status**: 📋 Planned
+**Status**: ✅ Implemented (March 8, 2026 - See `docs/plans/2026-03-08-saved-papers-design.md`)
 
 **Description**: Enable users to bookmark and organize papers for later reference.
 
