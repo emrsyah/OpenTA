@@ -51,6 +51,8 @@ To create an AI research assistant that doesn't just retrieve papers, but **acti
 | **User Feedback Widget** | Collect feedback on AI responses | ✅ Implemented |
 | **Conversation Management** | Persistent research sessions with history | ✅ Implemented |
 | **Source Citations** | Inline citations with paper metadata | ✅ Implemented |
+| **Saved Papers** | Save papers to collections for later reference | ✅ Implemented |
+| **Collections** | Create and manage personal paper collections | ✅ Implemented |
 | **JWT Backend Auth** | Secure auth for DSPy backend service | ✅ Implemented |
 
 ### 📋 Planned Features
@@ -354,11 +356,20 @@ open-ta-backend/ (DSPy Agents - Separate Repo)
 | `/api/lecturers/detail` | GET | Get lecturer details | ❌ |
 | `/api/lecturers/web-search` | GET | Exa web search for lecturer | ❌ |
 
-### User Feedback
+| `/api/feedback` | POST | Submit user feedback | ✅ |
+
+### Saved Papers & Collections
 
 | Endpoint | Method | Description | Auth Required |
 |----------|--------|-------------|---------------|
-| `/api/feedback` | POST | Submit user feedback | ✅ |
+| `/api/saved-papers` | GET | List saved papers | ✅ |
+| `/api/saved-papers` | POST | Save a paper to collection | ✅ |
+| `/api/saved-papers/[id]` | DELETE | Remove saved paper | ✅ |
+| `/api/saved-papers/[id]` | PATCH | Update saved paper (note, collection) | ✅ |
+| `/api/saved-papers/status/[catalogId]` | GET | Check if paper is saved | ✅ |
+| `/api/collections` | GET | List user collections | ✅ |
+| `/api/collections` | POST | Create new collection | ✅ |
+| `/api/collections/[id]` | DELETE | Delete collection | ✅ |
 
 ## 🔒 Authentication & Agent Security
 
