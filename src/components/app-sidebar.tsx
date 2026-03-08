@@ -224,7 +224,7 @@ export function AppSidebar() {
               </Button>
             </SidebarGroupLabel>
             <SidebarGroupContent className="relative flex-1 min-h-0 overflow-hidden">
-              {isPending || isLoadingConversations ? (
+              {isLoadingConversations && conversations.length === 0 ? (
                 <div className="space-y-2 px-3 py-2">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="flex items-center gap-2">
@@ -235,7 +235,7 @@ export function AppSidebar() {
                 </div>
               ) : conversations.length === 0 ? (
                 <div className="text-center py-4">
-                  <p className="text-xs text-muted-foreground">No chats yet</p>
+                  <p className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">No chats yet</p>
                 </div>
               ) : (
                 <div

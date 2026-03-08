@@ -35,7 +35,7 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button type="button" className="flex items-center justify-center gap-2 p-2 hover:bg-accent transition-colors w-full">
+        <button type="button" className="flex items-center justify-start group-data-[collapsible=icon]:justify-center gap-2 p-2 hover:bg-accent transition-colors w-full">
           <Avatar className="h-8 w-8">
             <AvatarImage
               src={user.image || undefined}
