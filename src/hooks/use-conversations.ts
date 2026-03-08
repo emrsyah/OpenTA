@@ -75,7 +75,7 @@ function mergeConversations(
 export function useConversations() {
   const [, forceUpdate] = useState({});
   const { data: session, isPending } = authClient.useSession();
-  const isAuthenticated = !isPending && session?.user;
+  const isAuthenticated = !isPending && !!session?.user;
 
   // Local state for UI feedback
   const [isLoadingMore, setIsLoadingMore] = useState(false);
