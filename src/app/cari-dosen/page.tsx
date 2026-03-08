@@ -7,12 +7,12 @@ import useSWR from "swr";
 import { useDebouncedCallback } from "use-debounce";
 import { LecturerCard } from "@/components/lecturer-card";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { LecturerResult, SearchResponse } from "@/types/lecturer";
+import { SearchResponse } from "@/types/lecturer";
 
 type SearchMode = "keyword" | "semantic";
 
@@ -57,18 +57,16 @@ export default function CariDosenPage() {
     return res.json() as Promise<SearchResponse>;
   };
 
-  const params = new URLSearchParams({
-    topic: topic.trim(),
-    limit: "20",
-    minPapers: "1",
-    searchMode: searchMode,
-  });
-
-  // Enable SWR based on conditions (topic.length > 0 && hasSearched)
+  // Enable SWR based on conditions
   const shouldFetch = hasSearched && topic.trim().length > 0;
 
+  // Construct stable cache key for SWR (avoid URLSearchParams recreation)
+  const searchKey = shouldFetch
+    ? `/api/lecturers/search?topic=${encodeURIComponent(topic.trim())}&limit=20&minPapers=1&searchMode=${searchMode}`
+    : null;
+
   const { data: results, error: swrError, isLoading: swrLoading } = useSWR<SearchResponse>(
-    shouldFetch ? `/api/lecturers/search?${params}` : null,
+    searchKey,
     fetcher,
     { keepPreviousData: true, revalidateOnFocus: false }
   );

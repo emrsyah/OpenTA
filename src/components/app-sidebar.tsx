@@ -166,8 +166,8 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
-      <SidebarHeader className="border-b px-6 py-4 hover-scrollbar">
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="border-b px-2 py-4 hover-scrollbar group-data-[collapsible=icon]:p-2">
         <div className="flex items-center gap-2">
           <Image
             src="/favicon/favicon-32x32.png"
@@ -176,7 +176,7 @@ export function AppSidebar() {
             height={24}
             className="h-6 w-6"
           />
-          <div>
+          <div className="group-data-[collapsible=icon]:hidden">
             <h2 className="font-semibold text-sm">OpenTA</h2>
             <p className="text-xs text-muted-foreground">Research Directory</p>
           </div>
@@ -191,7 +191,11 @@ export function AppSidebar() {
                 const isActive = pathname === item.url;
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.title}
+                    >
                       <Link href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
@@ -220,7 +224,7 @@ export function AppSidebar() {
               </Button>
             </SidebarGroupLabel>
             <SidebarGroupContent className="relative flex-1 min-h-0 overflow-hidden">
-              {isPending || isLoadingConversations ? (
+              {isLoadingConversations && conversations.length === 0 ? (
                 <div className="space-y-2 px-3 py-2">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="flex items-center gap-2">
@@ -231,7 +235,7 @@ export function AppSidebar() {
                 </div>
               ) : conversations.length === 0 ? (
                 <div className="text-center py-4">
-                  <p className="text-xs text-muted-foreground">No chats yet</p>
+                  <p className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">No chats yet</p>
                 </div>
               ) : (
                 <div
@@ -303,11 +307,11 @@ export function AppSidebar() {
             <div className="h-3 w-3/4 bg-muted animate-pulse rounded mx-auto mt-1" />
           </div>
         ) : isAuthenticated ? (
-          <div className="flex flex-col gap-2">
+          <div className="flex  flex-col gap-2">
             <UserMenu />
             <FeedbackDialog />
-            <Separator className="my-1" />
-            <p className="text-xs text-muted-foreground text-center">
+            <Separator className="my-1 group-data-[collapsible=icon]:hidden" />
+            <p className="text-xs text-muted-foreground text-center group-data-[collapsible=icon]:hidden">
               "Knowledge doesn't wait to be found. It waits to be asked."
             </p>
           </div>
@@ -315,7 +319,7 @@ export function AppSidebar() {
           <div className="flex flex-col gap-2">
             <GoogleSsoButton />
             <FeedbackDialog />
-            <p className="text-xs text-muted-foreground text-center">
+            <p className="text-xs text-muted-foreground text-center group-data-[collapsible=icon]:hidden">
               "Knowledge doesn't wait to be found. It waits to be asked."
             </p>
           </div>

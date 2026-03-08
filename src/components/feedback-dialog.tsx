@@ -38,8 +38,7 @@ export function FeedbackDialog() {
   const isMessageValid =
     message.trim().length >= MIN_MESSAGE_LENGTH &&
     message.trim().length <= MAX_MESSAGE_LENGTH;
-  const isEmailValid = !email.trim() || EMAIL_REGEX.test(email.trim());
-
+  const isEmailValid = isAuthenticated || !email.trim() || EMAIL_REGEX.test(email.trim());
   const handleSubmit = async () => {
     if (!isMessageValid) {
       toast.error(
@@ -99,13 +98,13 @@ export function FeedbackDialog() {
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-2 px-2"
+          className="w-full justify-start group-data-[collapsible=icon]:justify-center gap-2 px-2"
         >
           <MessageSquarePlus className="h-4 w-4" />
-          <span>Send Feedback</span>
+          <span className="group-data-[collapsible=icon]:hidden">Send Feedback</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>Send Feedback</DialogTitle>
           <DialogDescription>
@@ -114,26 +113,19 @@ export function FeedbackDialog() {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="path">Current Page</Label>
-            <Input id="path" value={pathname} readOnly className="bg-muted" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="email">
-              Email {isAuthenticated ? "(your account)" : "(optional)"}
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder={
-                isAuthenticated ? undefined : "Leave your email for follow-up"
-              }
-              value={isAuthenticated ? session.user.email || "" : email}
-              onChange={(e) => setEmail(e.target.value)}
-              readOnly={isAuthenticated}
-              className={isAuthenticated ? "bg-muted" : undefined}
-            />
-          </div>
+          {!isAuthenticated && (
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email (optional)</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Leave your email for follow-up"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoFocus
+              />
+            </div>
+          )}
           <div className="grid gap-2">
             <Label htmlFor="message">Message</Label>
             <Textarea
@@ -142,7 +134,8 @@ export function FeedbackDialog() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               className="min-h-[100px]"
-              maxLength={MAX_MESSAGE_LENGTH + 100} // Allow slight buffer before hard cutoff
+              maxLength={MAX_MESSAGE_LENGTH + 100}
+              autoFocus={isAuthenticated}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Minimum {MIN_MESSAGE_LENGTH} characters</span>

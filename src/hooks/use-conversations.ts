@@ -12,9 +12,11 @@ export interface Conversation {
 
 let globalConversations: Conversation[] = [];
 let initialLoading = true;
+let hasLoadedOnce = false; // Track if we've ever loaded data
 let globalOffset = 0;
 let globalHasMore = true;
 const PAGE_SIZE = 20;
+let lastAuthState: boolean | null = null; // Track auth state changes
 const listeners: Set<() => void> = new Set();
 
 function notifyListeners() {
@@ -73,7 +75,7 @@ function mergeConversations(
 export function useConversations() {
   const [, forceUpdate] = useState({});
   const { data: session, isPending } = authClient.useSession();
-  const isAuthenticated = !isPending && session?.user;
+  const isAuthenticated = !isPending && !!session?.user;
 
   // Local state for UI feedback
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -91,20 +93,30 @@ export function useConversations() {
     };
   }, []);
 
-  // Reset state when auth changes
+  // Reset state when user actually signs out (not just auth revalidation)
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Only reset if we're transitioning from authenticated to not authenticated
+    // This prevents reset during auth revalidation flickers
+    const wasAuthenticated = lastAuthState === true;
+    lastAuthState = isAuthenticated;
+    
+    if (!isAuthenticated && wasAuthenticated) {
+      // User actually signed out
       globalConversations = [];
       globalOffset = 0;
       globalHasMore = true;
-      initialLoading = false;
+      initialLoading = true;
+      hasLoadedOnce = false;
       notifyListeners();
     }
   }, [isAuthenticated]);
 
-  // Fetch conversations on mount
+  // Fetch conversations on mount - only if we haven't loaded yet
   useEffect(() => {
     if (!isAuthenticated) return;
+    
+    // Skip fetch if we already have data (prevents re-fetch on auth revalidation)
+    if (hasLoadedOnce) return;
 
     const fetchConversations = async () => {
       try {
@@ -126,6 +138,7 @@ export function useConversations() {
         console.error("Failed to fetch conversations:", error);
       } finally {
         initialLoading = false;
+        hasLoadedOnce = true;
         notifyListeners();
       }
     };
@@ -187,7 +200,9 @@ export function useConversations() {
 
   return {
     conversations: globalConversations,
-    isLoading: initialLoading && isAuthenticated,
+    // Only show loading state on initial load when we have NO cached data
+    // This prevents loading flash on tab/window refocus
+    isLoading: initialLoading && isAuthenticated && !hasLoadedOnce,
     isLoadingMore,
     hasMore: globalHasMore,
     loadMore,

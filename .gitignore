@@ -20,6 +20,9 @@
 # scripts
 /.scripts/
 
+# PR Description
+/.pull_requests/
+
 # testing
 /coverage
 
