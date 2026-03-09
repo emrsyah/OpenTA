@@ -9,6 +9,7 @@ import {
   TaskTrigger,
 } from "@/components/ai-elements/task";
 import type { ChatMessage, PlanStep } from "@/hooks/use-streaming-chat";
+import { AgentActivityFeed } from "./agent-activity-feed";
 import { MessageThinking } from "./message-thinking";
 
 interface MessageResearchPanelProps {
@@ -32,8 +33,11 @@ const StepIcon = ({ status }: { status: PlanStep["status"] }) => {
 };
 
 /**
- * Research panel component that displays the progress of research steps
- * Shows classification status and individual research steps with their queries
+ * Research panel component that displays the progress of research steps.
+ *
+ * Detects whether the message was produced by the DeepAgents backend
+ * (rich activity feed) or the legacy DSPy backend (plan steps) and
+ * renders the appropriate UI.
  */
 export function MessageResearchPanel({
   message,
@@ -46,7 +50,31 @@ export function MessageResearchPanel({
     isThinking,
     acknowledgment,
     thinkingContent,
+    activityFeed,
+    toolCalls,
+    subagents,
+    planStepsList,
+    agentStarted,
   } = message;
+
+  // ── DeepAgents path: rich activity feed ──────────────────────────
+  // If we have any activity feed events or tool call entries, use the
+  // Manus-like AgentActivityFeed component.
+  const hasDeepAgentsActivity =
+    (activityFeed && activityFeed.length > 0) ||
+    (toolCalls && Object.keys(toolCalls).length > 0) ||
+    (subagents && Object.keys(subagents).length > 0) ||
+    (planStepsList && planStepsList.length > 0) ||
+    agentStarted;
+
+  if (hasDeepAgentsActivity) {
+    return (
+      <AgentActivityFeed message={message} isStreaming={isStreaming} />
+    );
+  }
+
+  // ── Legacy DSPy path: plan steps + thinking ──────────────────────
+
   const [open, setOpen] = useState(true);
 
   useEffect(() => {
@@ -56,13 +84,10 @@ export function MessageResearchPanel({
   }, [answerStarted]);
 
   // Show shimmer during thinking state
-  // Keep shimmering until acknowledgment OR plan arrives (prevents empty gap)
-  // Don't show shimmer if acknowledgment already exists
   if (isThinking && !acknowledgment) {
     return <MessageThinking message="OpenTA is thinking..." />;
   }
 
-  // Only show panel if we have plan steps OR thinking content (CoT reasoning)
   const hasPlanSteps = planSteps && planSteps.length > 0;
   const hasThinkingContent =
     thinkingContent && thinkingContent.trim().length > 0;
@@ -101,7 +126,6 @@ export function MessageResearchPanel({
             </div>
           </TaskTrigger>
           <TaskContent>
-            {/* Per-step tasks */}
             {planSteps?.map((step) => (
               <Task
                 className="w-full"

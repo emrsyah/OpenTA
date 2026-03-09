@@ -55,6 +55,7 @@ const ChatContext = createContext<ChatContextValue | null>(null);
 export interface ChatProviderProps {
   children: React.ReactNode;
   conversationId: string;
+  api?: string;
   initialWebSearch?: boolean;
   initialQuery?: string;
   initialSourceTypes?: SourceType[];
@@ -64,6 +65,7 @@ export interface ChatProviderProps {
 export function ChatProvider({
   children,
   conversationId,
+  api = "/api/chat",
   initialWebSearch = false,
   initialQuery,
   initialSourceTypes,
@@ -91,6 +93,7 @@ export function ChatProvider({
 
   // Hook integration
   const { messages, status, sendMessage, isLoadingHistory } = useStreamingChat({
+    api,
     conversationId,
     filters,
     onConversationCreated: () => {

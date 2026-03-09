@@ -259,22 +259,22 @@ export const InlineCitationSource = ({
   children,
   ...props
 }: InlineCitationSourceProps) => (
-  <div className={cn("space-y-1", className)} {...props}>
-    {title ? (
-      url && (
+  <div className={cn("space-y-1 min-w-0 w-full overflow-hidden", className)} {...props}>
+    {title && (
+      url ? (
         <a
           target="_blank"
           href={url}
-          className="truncate underline font-medium text-sm leading-tight hover:underline"
+          className="block truncate underline font-medium text-sm leading-tight hover:underline"
         >
           {title}
         </a>
+      ) : (
+        <h4 className="block truncate font-medium text-sm leading-tight">{title}</h4>
       )
-    ) : (
-      <h4 className="truncate font-medium text-sm leading-tight">{title}</h4>
     )}
     {description && (
-      <p className="line-clamp-3 text-muted-foreground text-sm leading-relaxed">
+      <p className="line-clamp-2 text-muted-foreground text-xs leading-relaxed">
         {description}
       </p>
     )}

@@ -41,7 +41,7 @@ export interface ChatFrameProps {
 }
 
 export function ChatFrame({ children }: ChatFrameProps) {
-  return <div className="flex flex-col h-[calc(100vh-2rem)]">{children}</div>;
+  return <div className="flex flex-col h-full">{children}</div>;
 }
 
 // ─── Chat.LoadingState ─────────────────────────────────────────────────────────
