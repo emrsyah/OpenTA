@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Proxy the request to the backend agent with JWT authentication
-    const response = await fetch(`${backendUrl}/chat/new`, {
+    const response = await fetch(`${backendUrl}/chat/deepagents`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
                   controller.enqueue(
                     encoder.encode(
                       JSON.stringify({ type: "plan", steps: parsed.steps }) +
-                        "\n",
+                      "\n",
                     ),
                   );
                 } else if (parsed.type === "step_start") {
@@ -205,13 +205,13 @@ export async function POST(req: NextRequest) {
                         action: parsed.action,
                         ...(parsed.action === "reformulated_query"
                           ? {
-                              original_query: parsed.original_query,
-                              query: parsed.query,
-                              paper_count: parsed.paper_count,
-                            }
+                            original_query: parsed.original_query,
+                            query: parsed.query,
+                            paper_count: parsed.paper_count,
+                          }
                           : {
-                              query: parsed.query,
-                            }),
+                            query: parsed.query,
+                          }),
                       }) + "\n",
                     ),
                   );
@@ -283,19 +283,42 @@ export async function POST(req: NextRequest) {
                   );
                 } else if (parsed.type === "token" && parsed.content) {
                   hasTokens = true;
+                  if (parsed.is_subagent) {
+                    controller.enqueue(
+                      encoder.encode(
+                        JSON.stringify({
+                          type: "subagent_token",
+                          subagent_id: parsed.source,
+                          content: parsed.content,
+                        }) + "\n",
+                      ),
+                    );
+                  } else {
+                    controller.enqueue(
+                      encoder.encode(
+                        JSON.stringify({
+                          type: "text",
+                          content: parsed.content,
+                          source: parsed.source,
+                          is_subagent: parsed.is_subagent,
+                        }) + "\n",
+                      ),
+                    );
+                    controller.enqueue(
+                      encoder.encode(
+                        JSON.stringify({
+                          type: "rationale",
+                          content: parsed.content,
+                        }) + "\n",
+                      ),
+                    );
+                  }
+                } else if (parsed.type === "subagent_token" && parsed.content) {
                   controller.enqueue(
                     encoder.encode(
                       JSON.stringify({
-                        type: "text",
-                        content: parsed.content,
-                      }) + "\n",
-                    ),
-                  );
-                } else if (parsed.type === "rationale" && parsed.content) {
-                  controller.enqueue(
-                    encoder.encode(
-                      JSON.stringify({
-                        type: "rationale",
+                        type: "subagent_token",
+                        subagent_id: parsed.subagent_id || parsed.source,
                         content: parsed.content,
                       }) + "\n",
                     ),
@@ -382,6 +405,51 @@ export async function POST(req: NextRequest) {
                         type: "refinement_done",
                         content: parsed.content,
                         sources: parsed.sources,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "subagent_start") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "subagent_start",
+                        subagent_id: parsed.subagent_id,
+                        subagent_type: parsed.subagent_type,
+                        description: parsed.description,
+                        step_id: parsed.step_id,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "subagent_done") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "subagent_done",
+                        subagent_id: parsed.subagent_id,
+                        subagent_type: parsed.subagent_type,
+                        result_preview: parsed.result_preview,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "subagent_tool_call") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "subagent_tool_call",
+                        subagent_id: parsed.subagent_id,
+                        tool: parsed.tool,
+                        tool_call_id: parsed.tool_call_id,
+                      }) + "\n",
+                    ),
+                  );
+                } else if (parsed.type === "subagent_tool_result") {
+                  controller.enqueue(
+                    encoder.encode(
+                      JSON.stringify({
+                        type: "subagent_tool_result",
+                        subagent_id: parsed.subagent_id,
+                        tool_name: parsed.tool_name,
+                        source: parsed.source,
                       }) + "\n",
                     ),
                   );

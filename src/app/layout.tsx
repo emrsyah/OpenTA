@@ -102,15 +102,17 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${GeistPixelSquare.variable} antialiased font-mono`}
       >
         <TooltipProvider>
-          <SidebarProvider>
+          <SidebarProvider className="h-svh overflow-hidden">
             <AppSidebar />
-            <SidebarInset>
-              <header className="flex h-14 items-center gap-2 border-b px-4">
+            <SidebarInset className="overflow-hidden">
+              <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="h-6" />
                 <span className="text-sm font-medium">OpenTA</span>
               </header>
-              {children}
+              <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                {children}
+              </div>
             </SidebarInset>
           </SidebarProvider>
         </TooltipProvider>

@@ -23,9 +23,9 @@ interface SuggestionChipsProps {
 
 export function SuggestionChips({ onSelect }: SuggestionChipsProps) {
   const suggestions = [
-    "Find papers about machine learning in telecommunications",
-    "What research has been done on 5G network optimization?",
-    "What are the trending topics in computer science research?",
+    "Explore research papers on artificial intelligence applications in Indonesian telecommunications",
+    "Find studies about sustainable energy solutions and renewable technology research",
+    "What are the latest developments in cybersecurity and digital privacy protection?",
   ];
 
   return (

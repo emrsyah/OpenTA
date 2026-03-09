@@ -9,6 +9,7 @@ export {
   default as Chat,
 } from "./chat-compound";
 export { ActiveFilterTags } from "./active-filter-tags";
+export { AgentActivityFeed } from "./agent-activity-feed";
 export { ChatProvider, type SourceType, useChatContext } from "./chat-provider";
 export { CitationHoverCard } from "./citation-hover-card";
 export { FilterPanel } from "./filter-panel";
