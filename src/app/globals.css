@@ -150,11 +150,11 @@
     }
 
     & ul {
-      @apply list-disc pl-5 mb-3 space-y-1;
+      @apply list-disc pl-6 mb-3 space-y-1;
     }
 
     & ol {
-      @apply list-decimal pl-5 mb-3 space-y-1;
+      @apply list-decimal pl-7 mb-3 space-y-1;
     }
 
     & li {

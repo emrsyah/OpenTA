@@ -40,10 +40,15 @@ export default async function ChatPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ q?: string; sources?: string; filters?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    sources?: string;
+    filters?: string;
+    mode?: "default" | "ai";
+  }>;
 }) {
   const { id } = await params;
-  const { q, sources, filters } = await searchParams;
+  const { q, sources, filters, mode } = await searchParams;
 
   // Parse filters from URL if present
   let initialFilters: ChatFilters | undefined;
@@ -71,10 +76,12 @@ export default async function ChatPage({
   const initialSourceTypes: SourceType[] = sources
     ? (sources.split(",") as SourceType[])
     : ["all"];
+  const chatApi = mode === "ai" ? "/api/chat/ai" : "/api/chat";
 
   return (
-    <div className="px-4">
+    <div className="px-4 h-full">
       <ChatProvider
+        api={chatApi}
         conversationId={id}
         initialWebSearch={false}
         initialQuery={q}

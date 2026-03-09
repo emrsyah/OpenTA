@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <Suspense>
-      <HomePage />
+      <HomePage chatMode="ai" />
     </Suspense>
   );
 }

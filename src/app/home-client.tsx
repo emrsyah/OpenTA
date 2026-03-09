@@ -60,7 +60,11 @@ const PromptInputAttachmentsDisplay = () => {
   );
 };
 
-export function HomePage() {
+interface HomePageProps {
+  chatMode?: "default" | "ai";
+}
+
+export function HomePage({ chatMode = "default" }: HomePageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, isPending } = authClient.useSession();
@@ -121,6 +125,7 @@ export function HomePage() {
     const conversationId = nanoid();
     const params = new URLSearchParams();
     if (message.text) params.set("q", message.text);
+    if (chatMode === "ai") params.set("mode", "ai");
 
     // Pass filters through URL params if any are set
     if (Object.keys(filters).length > 0) {
@@ -145,9 +150,9 @@ export function HomePage() {
   );
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       <AnnouncementBanner />
-      <div className="flex md:mx-4 flex-col h-[calc(100vh-2rem)]">
+      <div className="flex md:mx-4 flex-col flex-1 min-h-0">
       <Conversation className="flex-1 overflow-hidden">
         <ConversationContent>
           <div className="flex flex-col items-center justify-center h-full px-4 animate-in mt-16 fade-in slide-in-from-bottom-4 duration-1000">
@@ -176,7 +181,7 @@ export function HomePage() {
             </div>
 
             {/* Suggestion Chips */}
-            <div className="w-full max-w-2xl mt-12">
+            <div className="w-full max-w-2xl mt-8">
               <SuggestionChips onSelect={handleSuggestionClick} />
             </div>
           </div>
@@ -228,6 +233,6 @@ export function HomePage() {
         </PromptInput>
       </div>
     </div>
-    </>
+    </div>
   );
 }

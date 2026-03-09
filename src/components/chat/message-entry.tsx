@@ -181,6 +181,15 @@ export function MessageEntry({ message, isStreaming }: MessageEntryProps) {
     message.refinementState === "streaming" ||
     message.refinementState === "searching";
 
+  // DeepAgents activity feed already shows papers inside tool call cards,
+  // so we skip the duplicate MessageSources panel when it's active.
+  const hasDeepAgentsActivity =
+    (message.activityFeed && message.activityFeed.length > 0) ||
+    (message.toolCalls && Object.keys(message.toolCalls).length > 0) ||
+    (message.subagents && Object.keys(message.subagents).length > 0) ||
+    (message.planStepsList && message.planStepsList.length > 0) ||
+    message.agentStarted;
+
   return (
     <Message from={message.role}>
       <MessageContent>
@@ -230,9 +239,11 @@ export function MessageEntry({ message, isStreaming }: MessageEntryProps) {
           })}
         </div>
 
-        {message.role === "assistant" && !!message.sources?.length && (
-          <MessageSources sources={message.sources} />
-        )}
+        {message.role === "assistant" &&
+          !!message.sources?.length &&
+          !isStreaming && (
+            <MessageSources sources={message.sources} />
+          )}
       </MessageContent>
       {/* Copy button - only show when not streaming */}
       {!isStreaming && textContent && (
