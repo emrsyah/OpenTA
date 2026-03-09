@@ -69,7 +69,9 @@ export function HomePage({ chatMode = "default" }: HomePageProps) {
   const searchParams = useSearchParams();
   const { data: session, isPending } = authClient.useSession();
   const [text, setText] = useState<string>("");
-  const [filters, setFilters] = useState<ChatFilters>({});
+  const [filters, setFilters] = useState<ChatFilters>({
+    catalogType: "Karya Ilmiah - Skripsi (S1) - Reference",
+  });
 
   // Handle error parameters from redirects
   useEffect(() => {
