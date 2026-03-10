@@ -110,7 +110,7 @@ export default function RootLayout({
                 <Separator orientation="vertical" className="h-6" />
                 <span className="text-sm font-medium">OpenTA</span>
               </header>
-              <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
                 {children}
               </div>
             </SidebarInset>
