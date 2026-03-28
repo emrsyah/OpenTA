@@ -1,3 +1,4 @@
+import { MaintenanceBanner } from "@/components/maintenance-banner";
 import { GeistPixelSquare } from "geist/font/pixel";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -105,6 +106,7 @@ export default function RootLayout({
           <SidebarProvider className="h-svh overflow-hidden">
             <AppSidebar />
             <SidebarInset className="overflow-hidden">
+              <MaintenanceBanner />
               <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="h-6" />

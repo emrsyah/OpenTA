@@ -34,7 +34,6 @@ import {
   QuickFilterChips,
 } from "@/components/chat";
 import { SuggestionChips } from "@/components/suggestion-chips";
-import { AnnouncementBanner } from "@/components/announcement-banner";
 import { authClient, signInGoogle } from "@/lib/auth/client";
 
 const PromptInputAttachmentsDisplay = () => {
@@ -153,7 +152,6 @@ export function HomePage({ chatMode = "default" }: HomePageProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <AnnouncementBanner />
       <div className="flex md:mx-4 flex-col flex-1 min-h-0">
       <Conversation className="flex-1 overflow-hidden">
         <ConversationContent>
