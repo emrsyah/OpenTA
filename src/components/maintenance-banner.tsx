@@ -7,6 +7,12 @@ import { Button } from "@/components/ui/button";
 
 const MAINTENANCE_KEY = "openta-maintenance-dismissed";
 
+function isPastNextMonth() {
+  const now = new Date();
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  return now >= nextMonth;
+}
+
 function getTimeUntilNextMonth() {
   const now = new Date();
   const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -28,6 +34,14 @@ export function MaintenanceBanner() {
 
   useEffect(() => {
     setIsMounted(true);
+
+    // Auto-dismiss if we've reached next month
+    if (isPastNextMonth()) {
+      localStorage.setItem(MAINTENANCE_KEY, "true");
+      setIsDismissed(true);
+      return;
+    }
+
     const dismissed = localStorage.getItem(MAINTENANCE_KEY);
     setIsDismissed(dismissed === "true");
 
@@ -40,8 +54,20 @@ export function MaintenanceBanner() {
   }, []);
 
   useEffect(() => {
+    // Don't run countdown if we're already past next month
+    if (isPastNextMonth()) {
+      return;
+    }
+
     const interval = setInterval(() => {
       setTimeLeft(getTimeUntilNextMonth());
+
+      // Check if countdown has completed
+      if (isPastNextMonth()) {
+        localStorage.setItem(MAINTENANCE_KEY, "true");
+        setIsDismissed(true);
+        clearInterval(interval);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
