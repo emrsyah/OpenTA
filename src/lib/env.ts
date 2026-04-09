@@ -13,13 +13,21 @@ const envSchema = z.object({
     .enum(["development", "test", "production"])
     .default("development"),
 
+  // AI Agent variables
+  OPENROUTER_API_KEY: z.string().min(1, "OPENROUTER_API_KEY is required for the AI agent"),
+  AGENT_MODEL: z
+    .string()
+    .default("google/gemini-2.5-flash")
+    .describe("OpenRouter model ID for the research agent"),
+
+  // Redis (optional — falls back to DB-only mode)
+  REDIS_URL: z
+    .string()
+    .default("redis://localhost:6379")
+    .describe("Redis URL for session caching. Falls back to DB-only if unavailable."),
+
   // Client-side variables
   NEXT_PUBLIC_APP_URL: z.string().url(),
-  NEXT_PUBLIC_BACKEND_URL: z
-    .string()
-    .url()
-    .optional()
-    .default("http://localhost:8000"),
 });
 
 // Validate environment variables
