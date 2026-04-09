@@ -10,6 +10,8 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?style=flat-square&logo=tailwind-css)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-4169E1?style=flat-square&logo=postgresql)
 ![DSPy](https://img.shields.io/badge/DSPy-Framework-orange?style=flat-square)
+![LangChain](https://img.shields.io/badge/LangChain-LLM_Agents-1E3A8A?style=flat-square)
+![LangGraph](https://img.shields.io/badge/LangGraph-Agent_Graph-10B981?style=flat-square)
 ![Voyage AI](https://img.shields.io/badge/Voyage_AI-Embeddings-8B5CF6?style=flat-square)
 ![Exa AI](https://img.shields.io/badge/Exa_AI-Web_Search-10B981?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
@@ -32,7 +34,7 @@ OpenTA is an **AI-powered co-researcher** designed to accelerate academic resear
 - 🔬 **Run deep research** tasks with autonomous agents that can perform multi-step investigations
 - 📊 **Generate insights** through context engineering and agent harness patterns
 
-Built with **DSPy** for declarative agent programming, the system uses **context engineering** to maintain research context and **agent harness** patterns to orchestrate complex research workflows.
+Built with **LangChain/LangGraph** for agent orchestration, the system uses **session-based memory** for conversation context and **custom tools** for research operations.
 
 ### Vision
 
@@ -44,7 +46,7 @@ To create an AI research assistant that doesn't just retrieve papers, but **acti
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| **AI Research Assistant** | DSPy-powered agents for research queries | ✅ Implemented |
+| **AI Research Assistant** | LangChain-powered agents for research queries | ✅ Implemented |
 | **Paper Discovery** | Search Tel-U alumni papers with semantic search | ✅ Implemented |
 | **Cari Dosen** | AI-powered lecturer search with Exa web enrichment | ✅ Implemented |
 | **Research Filtering** | Metadata filters for refined research results | ✅ Implemented |
@@ -89,6 +91,33 @@ To create an AI research assistant that doesn't just retrieve papers, but **acti
         ┌───────────┼────────────┐
         │           │            │
 ┌───────▼─────┐ ┌──▼──────────┐ └───┐
+│   PostgreSQL │ │ LangChain    │     │
+│   Database   │ │   Agent      │     │
+│  (Drizzle)   │ │ (Next.js)    │     │
+│              │ │  + Tools     │     │
+└──────────────┘ └─────────────┘     │
+      │                                │
+      └────────────────────────────────┘
+           Context + Research Flow
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Frontend (Next.js)                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │   Pages      │  │  Components  │  │   Hooks & Utils     │  │
+│  │  (App Router)│  │   (UI + Chat)│  │  (State Management) │  │
+│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                            │
+                    ┌───────┴────────┐
+                    │                │
+            ┌───────▼────────┐  ┌───▼────────────┐
+            │  API Routes    │  │ better-auth    │
+            │  (Next.js)     │  │   Sessions     │
+            └───────┬────────┘  └────────────────┘
+                    │
+        ┌───────────┼────────────┐
+        │           │            │
+┌───────▼─────┐ ┌──▼──────────┐ └───┐
 │   PostgreSQL │ │  DSPy       │     │
 │   Database   │ │  Backend    │     │
 │  (Drizzle)   │ │  (FastAPI)  │     │
@@ -102,6 +131,12 @@ To create an AI research assistant that doesn't just retrieve papers, but **acti
 ### Agent Architecture
 
 #### Research Agent Flow
+
+1. **User Query** → Research question or task
+2. **Session Memory** → Load conversation history and context
+3. **LangGraph Agent** → Route to appropriate tools (search, retrieve, analyze)
+4. **Tool Execution** → Agent runs reasoning chain with custom tools
+5. **Response Generation** → Structured research output with citations
 
 1. **User Query** → Research question or task
 2. **Context Engineering** → Gather relevant papers, history, and domain knowledge
@@ -130,9 +165,15 @@ To create an AI research assistant that doesn't just retrieve papers, but **acti
                                └────────────────────────┘
 ```
 
-### DSPy Agent System
+### LangChain/LangGraph Agent System
 
-**Search Agent**: Find relevant papers using semantic search  
+**Search Tool**: Find relevant papers using semantic search  
+**Retrieve Tool**: Fetch paper details and metadata  
+**Analysis Tool**: Extract key insights, methodologies, findings  
+**Synthesis Tool**: Combine multiple papers into coherent answer  
+**Deep Research Agent** (Planned): Run multi-step investigations with subtasks
+
+
 **Analysis Agent**: Extract key insights, methodologies, findings  
 **Synthesis Agent**: Combine multiple papers into coherent answer  
 **Deep Research Agent** (Planned): Run multi-step investigations with subtasks
@@ -148,7 +189,12 @@ To create an AI research assistant that doesn't just retrieve papers, but **acti
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Streamdown**: [Streamdown](https://streamdown.dev/) (code, math, mermaid, CJK support)
 
-#### Backend (DSPy Agents)
+#### Backend (LangChain/LangGraph Agent)
+- **Agent Framework**: [LangChain](https://langchain.com/) + [LangGraph](https://langgraph.ai/) (Graph-based agent orchestration)
+- **LLM**: OpenAI GPT models
+- **Embedding**: [Voyage AI](https://voyageai.com/) for semantic search
+- **Tools**: Custom tools for paper search, retrieval, and analysis
+- **Session Memory**: Conversation history with semantic retrieval
 - **Agent Framework**: [DSPy](https://github.com/stanfordnlp/dspy) (Declarative agent programming)
 - **FastAPI**: REST API for agent endpoints
 - **Principle - Agent Harness** : [Agent Harness](https://www.philschmid.de/agent-harness-2026)
@@ -167,6 +213,7 @@ To create an AI research assistant that doesn't just retrieve papers, but **acti
 - **Auth Library**: [better-auth 1.4.18](https://www.better-auth.com/)
 - **OAuth**: Google SSO
 - **Session Management**: JWT-based stateless sessions
+- **Agent Security**: Session-based authentication for internal LangChain agent
 - **Backend Security**: JWT token validation for DSPy service
 
 #### Development Tools
@@ -181,6 +228,9 @@ To create an AI research assistant that doesn't just retrieve papers, but **acti
 Ensure you have the following installed:
 
 - [Node.js 20+](https://nodejs.org/) or [Bun](https://bun.sh/)
+- [PostgreSQL 14+](https://www.postgresql.org/download/) with pgvector
+- [OpenAI API Key](https://platform.openai.com/) (for LLM)
+- Google Cloud Project (for OAuth)
 - [PostgreSQL 14+](https://www.postgresql.org/download/) with pgvector
 - [Python 3.10+](https://www.python.org/downloads/) (for DSPy backend)
 - Google Cloud Project (for OAuth)
@@ -208,7 +258,11 @@ cp .env.example .env
 
 Configure your environment variables:
 
-```bash
+```
+# Application
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Database
 # Application
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
@@ -220,6 +274,10 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/openta
 BETTER_AUTH_SECRET=your-super-secret-key-at-least-32-chars-long
 BETTER_AUTH_URL=http://localhost:3000
 
+# Google OAuth
+BETTER_AUTH_SECRET=your-super-secret-key-at-least-32-chars-long
+BETTER_AUTH_URL=http://localhost:3000
+
 # Backend API Shared Secret (for DSPy service)
 BACKEND_API_SECRET=your-backend-api-secret-min-32-chars
 
@@ -228,6 +286,14 @@ GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 # Voyage AI (for vector embeddings)
+VOYAGE_API_KEY=your-voyage-api-key
+
+# OpenAI (for LLM)
+OPENAI_API_KEY=sk-...
+
+# Exa AI (for web search - lecturer profiles)
+EXA_API_KEY=your-exa-api-key
+```
 VOYAGE_API_KEY=your-voyage-api-key
 
 # Exa AI (for web search - lecturer profiles)
@@ -249,7 +315,20 @@ bun run db:push
 bun run db:studio
 ```
 
-### 5. Run Development Server
+```
+bun run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 📁 Project Structure
+
+```bash
+# Start the development server
+bun run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```bash
 # Frontend
@@ -276,7 +355,8 @@ open-ta-telyu/ (Frontend)
 │   │   ├── [id]/              # Research session page
 │   │   ├── api/               # API routes
 │   │   │   ├── auth/          # better-auth endpoints
-│   │   │   ├── chat/          # Proxy to DSPy backend
+│   │   │   ├── chat/          # LangChain agent endpoint
+│   │   │   ├── conversations/ # Session CRUD
 │   │   │   ├── conversations/ # Session CRUD
 │   │   │   ├── catalog/       # Paper search
 │   │   │   ├── lecturers/     # Lecturer search & details
@@ -291,7 +371,20 @@ open-ta-telyu/ (Frontend)
 │   │   ├── ai-elements/       # AI response elements
 │   │   └── lecturer-card.tsx  # Lecturer display card
 │   ├── hooks/                 # Custom React hooks
-│   ├── lib/                   # Utility libraries
+│   │   ├── lib/                   # Utility libraries
+│   │   │   ├── auth/              # Auth utilities
+│   │   │   ├── db/                # Database functions
+│   │   │   ├── voyage.ts          # Voyage AI embedding client
+│   │   │   ├── lecturer-utils.ts  # Lecturer data utilities
+│   │   │   └── ai/                # LangChain agent implementation
+│   │   │       ├── agent.ts       # Main agent definition
+│   │   │       ├── tools.ts       # Custom agent tools
+│   │   │       ├── retriever.ts   # Document retriever
+│   │   │       ├── session-memory.ts # Session memory management
+│   │   │       ├── types.ts       # TypeScript types
+│   │   │       ├── stream.ts      # Streaming utilities
+│   │   │       ├── prompts/       # Agent prompts
+│   │   │       └── citation-audit.ts # Citation verification
 │   │   ├── auth/              # Auth utilities (JWT generation)
 │   │   ├── db/                # Database functions
 │   │   ├── voyage.ts          # Voyage AI embedding client
@@ -582,6 +675,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
+- **Inspiration**: LangChain/LangGraph agent patterns, context engineering
+- **Libraries**: [Next.js](https://nextjs.org/), [better-auth](https://www.better-auth.com/), [LangChain](https://langchain.com/), [LangGraph](https://langgraph.ai/), [Drizzle ORM](https://orm.drizzle.team/)
+
 - **Inspiration**: DSPy framework, Agent research patterns
 - **Libraries**: [Next.js](https://nextjs.org/), [better-auth](https://www.better-auth.com/), [DSPy](https://github.com/stanfordnlp/dspy), [Drizzle ORM](https://orm.drizzle.team/)
 - **UI Components**: [shadcn/ui](https://ui.shadcn.com/), [Radix UI](https://www.radix-ui.com/)
@@ -589,6 +685,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Research**: Telkom University academic community
 
 ## 🔗 Related Repositories
+
+- **[context-engineering](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus)** - Context management system
+- **[LangChain](https://langchain.com/docs)** - Agent framework documentation
+- **[LangGraph](https://langgraph.ai/)** - Graph-based agent orchestration
 
 - **[open-ta-backend](https://github.com/emrsyah/open-ta-agent)** - DSPy agent implementation
 - **[context-engineering](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus)** - Context management system

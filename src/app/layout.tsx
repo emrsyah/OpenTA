@@ -12,6 +12,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -106,7 +107,7 @@ export default function RootLayout({
           <SidebarProvider className="h-svh overflow-hidden">
             <AppSidebar />
             <SidebarInset className="overflow-hidden">
-              <MaintenanceBanner />
+              {/* <MaintenanceBanner /> */}
               <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="h-6" />
@@ -118,6 +119,7 @@ export default function RootLayout({
             </SidebarInset>
           </SidebarProvider>
         </TooltipProvider>
+        <Analytics />
         <Toaster />
       </body>
     </html>
