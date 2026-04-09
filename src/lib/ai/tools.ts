@@ -103,18 +103,23 @@ the raw user message.`,
 
 export const getPaperDetailsTool = tool({
   description: `\
-Fetch full metadata for one or more papers by their integer IDs.
+Fetch full metadata for one or more papers by their string IDs.
 
 Use this tool to retrieve complete details (full abstract, catalog type,
 publisher, access link, subject) when you need to do a thorough
 comparison or answer a detailed follow-up question about specific papers.
-Pass ALL relevant IDs in a single call.`,
+Pass ALL relevant IDs in a single call.
+
+IMPORTANT: Use the \`id\` field (e.g. "catalog_123") from previous
+search results — do NOT use \`paper_number\`.`,
   inputSchema: z.object({
-    paper_ids: z.array(z.number()).describe("List of integer paper IDs from previous search results"),
+    paper_ids: z
+      .array(z.string())
+      .describe('List of paper IDs from previous search results (e.g. ["catalog_123", "catalog_456"])'),
   }),
   execute: async ({ paper_ids }) => {
     try {
-      const records = await getPapersByIds(paper_ids);
+      const records = await getPapersByIds(paper_ids as string[]);
 
       if (records.length === 0) {
         return JSON.stringify({

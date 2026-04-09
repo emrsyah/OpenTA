@@ -104,6 +104,14 @@ export async function searchPapers(query: string, opts?: SearchOptions): Promise
 }
 
 /**
+ * Escape PostgreSQL LIKE/ILIKE special characters in a string.
+ * Prevents user-supplied `%` or `_` from being treated as wildcards.
+ */
+function escapeLike(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
+/**
  * Keyword search using ILIKE on title, author, and subject.
  */
 async function keywordSearch(
@@ -111,11 +119,12 @@ async function keywordSearch(
   limit: number,
   whereClause?: ReturnType<typeof and>,
 ): Promise<PaperResult[]> {
+  const escaped = escapeLike(query);
   const keywordConditions = [
     or(
-      ilike(catalog.title, `%${query}%`),
-      ilike(catalog.author, `%${query}%`),
-      ilike(catalog.subject, `%${query}%`),
+      ilike(catalog.title, `%${escaped}%`),
+      ilike(catalog.author, `%${escaped}%`),
+      ilike(catalog.subject, `%${escaped}%`),
     ),
   ];
 
@@ -193,16 +202,27 @@ export async function getPaperById(paperId: string): Promise<PaperResult | null>
 }
 
 /**
- * Get full metadata for multiple papers by their database IDs.
+ * Get full metadata for multiple papers by their IDs.
+ * Accepts both "catalog_123" string IDs (as returned by search_papers)
+ * and plain numeric strings / legacy number arrays for backward-compat.
  */
-export async function getPapersByIds(paperIds: number[]): Promise<PaperResult[]> {
+export async function getPapersByIds(paperIds: string[]): Promise<PaperResult[]> {
   if (paperIds.length === 0) return [];
+
+  const numericIds = paperIds
+    .map((id) => {
+      const stripped = String(id).replace(/^catalog_/, "");
+      return Number.parseInt(stripped, 10);
+    })
+    .filter((id) => !Number.isNaN(id));
+
+  if (numericIds.length === 0) return [];
 
   // Batch fetch — pg supports IN clause
   const results = await db
     .select()
     .from(catalog)
-    .where(sql`id = ANY(${paperIds})`);
+    .where(sql`id = ANY(${numericIds})`);
 
   return results.map((row) => catalogToPaper(row, 1.0));
 }

@@ -11,6 +11,7 @@
  */
 
 import Redis from "ioredis";
+import { env } from "@/lib/env";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { conversations, messages } from "@/db/schema/conversations";
@@ -369,7 +370,11 @@ let _sessionMemory: SessionMemory | null = null;
 
 export function getSessionMemory(opts?: SessionMemoryOptions): SessionMemory {
   if (!_sessionMemory) {
-    _sessionMemory = new SessionMemory(opts);
+    _sessionMemory = new SessionMemory({
+      // Always honour the REDIS_URL env var; callers may still override via opts.
+      redisUrl: env.REDIS_URL,
+      ...opts,
+    });
   }
   return _sessionMemory;
 }
